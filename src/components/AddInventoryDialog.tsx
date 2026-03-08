@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 
 const defaultForm = {
@@ -21,6 +22,7 @@ const defaultForm = {
   quantity: "",
   min_stock: "",
   warehouse: "",
+  supplier_id: "",
 };
 
 export function AddInventoryDialog() {
@@ -28,6 +30,14 @@ export function AddInventoryDialog() {
   const [form, setForm] = useState(defaultForm);
   const qc = useQueryClient();
 
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("suppliers").select("id, name").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
   const mutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("inventory").insert({
@@ -41,6 +51,7 @@ export function AddInventoryDialog() {
         quantity: Number(form.quantity) || 0,
         min_stock: Number(form.min_stock) || 0,
         warehouse: form.warehouse || null,
+        supplier_id: form.supplier_id || null,
       });
       if (error) throw error;
     },
@@ -101,6 +112,19 @@ export function AddInventoryDialog() {
               <Label htmlFor="selling_price">Selling Price (SAR)</Label>
               <Input id="selling_price" type="number" min="0" step="0.01" value={form.selling_price} onChange={(e) => set("selling_price", e.target.value)} />
             </div>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="supplier">Supplier</Label>
+            <Select value={form.supplier_id} onValueChange={(v) => set("supplier_id", v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="grid gap-2">
