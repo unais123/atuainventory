@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+// cleaned unused import
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { AddServiceRequestDialog } from "@/components/AddServiceRequestDialog";
