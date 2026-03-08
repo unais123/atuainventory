@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Mail, Phone } from "lucide-react";
+import { Search, Mail, Phone } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AddCustomerDialog } from "@/components/AddCustomerDialog";
 
 export default function Customers() {
   const { data: customers = [], isLoading } = useQuery({
@@ -22,7 +23,7 @@ export default function Customers() {
           <h1 className="page-header">Customers</h1>
           <p className="text-sm text-muted-foreground">Manage customer records and history.</p>
         </div>
-        <Button size="sm"><Plus className="h-4 w-4 mr-1" />Add Customer</Button>
+        <AddCustomerDialog />
       </div>
 
       <div className="relative max-w-sm">
