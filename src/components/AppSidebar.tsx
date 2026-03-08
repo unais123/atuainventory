@@ -42,6 +42,7 @@ const financeItems = [
 const otherItems = [
   { title: "Reports", url: "/reports", icon: BarChart3 },
   { title: "Suppliers", url: "/suppliers", icon: Truck },
+  { title: "Employees", url: "/employees", icon: UserCog },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
