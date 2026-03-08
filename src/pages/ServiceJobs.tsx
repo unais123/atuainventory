@@ -1,11 +1,20 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import { format } from "date-fns";
+import { AddServiceJobDialog } from "@/components/AddServiceJobDialog";
+import { ServiceJobDetailDialog } from "@/components/ServiceJobDetailDialog";
 
 export default function ServiceJobs() {
+  const [selected, setSelected] = useState<any>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ["service-jobs"],
     queryFn: async () => {
@@ -18,21 +27,40 @@ export default function ServiceJobs() {
     },
   });
 
+  const filtered = jobs.filter((j: any) => {
+    const q = search.toLowerCase();
+    if (!q) return true;
+    return (
+      (j.service_requests?.customers?.company_name ?? "").toLowerCase().includes(q) ||
+      (j.service_requests?.service_type ?? "").toLowerCase().includes(q) ||
+      (j.status ?? "").toLowerCase().includes(q) ||
+      (j.service_notes ?? "").toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="page-header">Service Jobs</h1>
-        <p className="text-sm text-muted-foreground">Track technician jobs, hardware usage, and completion status.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="page-header">Service Jobs</h1>
+          <p className="text-sm text-muted-foreground">Track technician jobs, hardware usage, and completion status.</p>
+        </div>
+        <AddServiceJobDialog />
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Search jobs..." className="pl-9 h-9" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
         </div>
-      ) : jobs.length === 0 ? (
-        <p className="text-muted-foreground text-sm text-center py-12">No service jobs yet.</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-muted-foreground text-sm text-center py-12">No service jobs found.</p>
       ) : (
-        <div className="rounded-xl border bg-card">
+        <div className="rounded-xl border bg-card overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -45,8 +73,8 @@ export default function ServiceJobs() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {jobs.map((j: any) => (
-                <TableRow key={j.id}>
+              {filtered.map((j: any) => (
+                <TableRow key={j.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setSelected(j); setDetailOpen(true); }}>
                   <TableCell className="font-medium">
                     {j.service_requests?.customers?.company_name ?? "—"}
                   </TableCell>
@@ -67,6 +95,8 @@ export default function ServiceJobs() {
           </Table>
         </div>
       )}
+
+      <ServiceJobDetailDialog job={selected} open={detailOpen} onOpenChange={setDetailOpen} />
     </div>
   );
 }
