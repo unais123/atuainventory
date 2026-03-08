@@ -51,6 +51,7 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     status: "Scheduled",
+    service_request_id: "",
     employee_ids: [] as string[],
     start_time: "",
     end_time: "",
