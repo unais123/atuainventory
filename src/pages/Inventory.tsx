@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Download } from "lucide-react";
+import { Search, Download } from "lucide-react";
+import { AddInventoryDialog } from "@/components/AddInventoryDialog";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -28,7 +29,7 @@ export default function Inventory() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" />Export</Button>
-          <Button size="sm"><Plus className="h-4 w-4 mr-1" />Add Item</Button>
+          <AddInventoryDialog />
         </div>
       </div>
 
