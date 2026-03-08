@@ -113,6 +113,19 @@ export function AddInventoryDialog() {
               <Input id="selling_price" type="number" min="0" step="0.01" value={form.selling_price} onChange={(e) => set("selling_price", e.target.value)} />
             </div>
           </div>
+          <div className="grid gap-2">
+            <Label htmlFor="supplier">Supplier</Label>
+            <Select value={form.supplier_id} onValueChange={(v) => set("supplier_id", v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="quantity">Quantity</Label>
