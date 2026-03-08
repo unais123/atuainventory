@@ -12,7 +12,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -22,6 +22,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { MobileCard } from "@/components/MobileCardView";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ROLES = ["Technician", "Engineer", "Supervisor", "Helper"];
 
@@ -69,7 +71,7 @@ function EmployeeFormDialog({ employee, open, onOpenChange }: {
             <Label>Name *</Label>
             <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label>Phone</Label>
               <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
@@ -79,7 +81,7 @@ function EmployeeFormDialog({ employee, open, onOpenChange }: {
               <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label>Role</Label>
               <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
@@ -89,7 +91,7 @@ function EmployeeFormDialog({ employee, open, onOpenChange }: {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-2 pt-6">
+            <div className="flex items-center gap-2 sm:pt-6">
               <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
               <Label>{form.is_active ? "Active" : "Inactive"}</Label>
             </div>
@@ -108,6 +110,7 @@ export default function Employees() {
   const [addOpen, setAddOpen] = useState(false);
   const [editEmployee, setEditEmployee] = useState<any>(null);
   const qc = useQueryClient();
+  const isMobile = useIsMobile();
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["employees"],
@@ -143,8 +146,8 @@ export default function Employees() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="page-header">Employees</h1>
           <p className="text-sm text-muted-foreground">Manage your team members and technicians.</p>
@@ -159,33 +162,65 @@ export default function Employees() {
         <Input placeholder="Search employees..." className="pl-9 h-9" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
-      <div className="rounded-xl border bg-card overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-[80px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <TableRow key={i}>
-                  {Array.from({ length: 6 }).map((_, j) => (
-                    <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : filtered.length === 0 ? (
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <p className="text-muted-foreground text-sm text-center py-12">No employees found.</p>
+      ) : isMobile ? (
+        <div className="space-y-3">
+          {filtered.map((emp: any) => (
+            <MobileCard
+              key={emp.id}
+              title={emp.name}
+              subtitle={emp.role || "—"}
+              badge={{
+                label: emp.is_active ? "Active" : "Inactive",
+                variant: emp.is_active ? "default" : "secondary",
+              }}
+              onClick={() => setEditEmployee(emp)}
+              fields={[
+                { label: "Phone", value: emp.phone || "—" },
+                { label: "Email", value: emp.email || "—" },
+              ]}
+              actions={
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => e.stopPropagation()}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete {emp.name}?</AlertDialogTitle>
+                      <AlertDialogDescription>This may fail if the employee is assigned to service jobs.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteMutation.mutate(emp.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              }
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border bg-card overflow-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No employees found.</TableCell>
+                <TableHead>Name</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[80px]">Actions</TableHead>
               </TableRow>
-            ) : (
-              filtered.map((emp: any) => (
+            </TableHeader>
+            <TableBody>
+              {filtered.map((emp: any) => (
                 <TableRow key={emp.id}>
                   <TableCell className="font-medium">{emp.name}</TableCell>
                   <TableCell>{emp.role || "—"}</TableCell>
@@ -221,11 +256,11 @@ export default function Employees() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <EmployeeFormDialog open={addOpen} onOpenChange={setAddOpen} />
       {editEmployee && (

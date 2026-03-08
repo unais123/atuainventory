@@ -9,11 +9,14 @@ import { Search } from "lucide-react";
 import { format } from "date-fns";
 import { AddServiceJobDialog } from "@/components/AddServiceJobDialog";
 import { ServiceJobDetailDialog } from "@/components/ServiceJobDetailDialog";
+import { MobileCard } from "@/components/MobileCardView";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ServiceJobs() {
   const [selected, setSelected] = useState<any>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const isMobile = useIsMobile();
 
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ["service-jobs"],
@@ -42,9 +45,11 @@ export default function ServiceJobs() {
     );
   });
 
+  const openDetail = (j: any) => { setSelected(j); setDetailOpen(true); };
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="page-header">Service Jobs</h1>
           <p className="text-sm text-muted-foreground">Track technician jobs, hardware usage, and completion status.</p>
@@ -63,6 +68,24 @@ export default function ServiceJobs() {
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-muted-foreground text-sm text-center py-12">No service jobs found.</p>
+      ) : isMobile ? (
+        <div className="space-y-3">
+          {filtered.map((j: any) => (
+            <MobileCard
+              key={j.id}
+              title={j.service_requests?.customers?.company_name ?? "—"}
+              subtitle={j.service_requests?.service_type ?? "—"}
+              status={j.status}
+              onClick={() => openDetail(j)}
+              fields={[
+                { label: "Employees", value: getEmployeeNames(j) || "—" },
+                { label: "Start", value: j.start_time ? format(new Date(j.start_time), "dd MMM yyyy") : "—" },
+                { label: "End", value: j.end_time ? format(new Date(j.end_time), "dd MMM yyyy") : "—" },
+                ...(j.service_notes ? [{ label: "Notes", value: j.service_notes, className: "col-span-2" }] : []),
+              ]}
+            />
+          ))}
+        </div>
       ) : (
         <div className="rounded-xl border bg-card overflow-auto">
           <Table>
@@ -79,7 +102,7 @@ export default function ServiceJobs() {
             </TableHeader>
             <TableBody>
               {filtered.map((j: any) => (
-                <TableRow key={j.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setSelected(j); setDetailOpen(true); }}>
+                <TableRow key={j.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetail(j)}>
                   <TableCell className="font-medium">
                     {j.service_requests?.customers?.company_name ?? "—"}
                   </TableCell>
