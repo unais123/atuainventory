@@ -48,11 +48,11 @@ export default function Customers() {
             <Skeleton key={i} className="h-40 rounded-xl" />
           ))}
         </div>
-      ) : customers.length === 0 ? (
-        <p className="text-muted-foreground text-sm text-center py-12">No customers yet.</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-muted-foreground text-sm text-center py-12">{search ? "No matching customers." : "No customers yet."}</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {customers.map((c) => (
+          {filtered.map((c) => (
             <div
               key={c.id}
               className="rounded-xl border bg-card p-5 hover:shadow-md transition-shadow cursor-pointer"
