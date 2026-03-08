@@ -1,12 +1,16 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Mail, Phone } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddCustomerDialog } from "@/components/AddCustomerDialog";
+import { CustomerDetailDialog } from "@/components/CustomerDetailDialog";
 
 export default function Customers() {
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ["customers"],
     queryFn: async () => {
@@ -42,7 +46,11 @@ export default function Customers() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {customers.map((c) => (
-            <div key={c.id} className="rounded-xl border bg-card p-5 hover:shadow-md transition-shadow cursor-pointer">
+            <div
+              key={c.id}
+              className="rounded-xl border bg-card p-5 hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => { setSelectedCustomer(c); setDetailOpen(true); }}
+            >
               <p className="font-semibold text-card-foreground">{c.company_name}</p>
               <p className="text-sm text-muted-foreground mt-1">{c.contact_person}</p>
               <div className="mt-3 space-y-1.5">
@@ -64,6 +72,12 @@ export default function Customers() {
           ))}
         </div>
       )}
+
+      <CustomerDetailDialog
+        customer={selectedCustomer}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
     </div>
   );
 }
