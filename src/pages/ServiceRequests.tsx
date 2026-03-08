@@ -89,6 +89,8 @@ export default function ServiceRequests() {
           </TableBody>
         </Table>
       </div>
+
+      <ServiceRequestDetailDialog request={selected} open={detailOpen} onOpenChange={setDetailOpen} />
     </div>
   );
 }
