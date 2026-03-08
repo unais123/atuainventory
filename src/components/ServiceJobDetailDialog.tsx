@@ -69,6 +69,19 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
     enabled: editing,
   });
 
+  const { data: requests = [] } = useQuery({
+    queryKey: ["service_requests_for_jobs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_requests")
+        .select("id, service_type, customers(company_name)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: editing,
+  });
+
   useEffect(() => {
     if (job) {
       const empIds = (job.service_job_employees || []).map((sje: any) => sje.employee_id);
