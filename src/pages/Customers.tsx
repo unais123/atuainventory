@@ -23,7 +23,7 @@ export default function Customers() {
           <h1 className="page-header">Customers</h1>
           <p className="text-sm text-muted-foreground">Manage customer records and history.</p>
         </div>
-        <Button size="sm"><Plus className="h-4 w-4 mr-1" />Add Customer</Button>
+        <AddCustomerDialog />
       </div>
 
       <div className="relative max-w-sm">
