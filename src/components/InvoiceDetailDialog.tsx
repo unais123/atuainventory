@@ -255,21 +255,21 @@ table th{background:#fff}
   </tr>
   <tr>
     <td class="label">Account Name<br><span>إسم الحساب</span></td>
-    <td>${cs?.bank_account_name || ''}</td>
+    <td>${escapeHtml(cs?.bank_account_name || '')}</td>
     <td style="text-align:center;border-bottom:0" rowspan="3"></td>
     <td style="text-align:center;border-bottom:0" rowspan="3"></td>
   </tr>
   <tr>
     <td class="label">Bank Name<br><span>اسم البنك</span></td>
-    <td>${cs?.bank_name || ''}</td>
+    <td>${escapeHtml(cs?.bank_name || '')}</td>
   </tr>
   <tr>
     <td class="label">Account No<br><span>رقم حساب</span></td>
-    <td>${cs?.bank_account_no || ''}</td>
+    <td>${escapeHtml(cs?.bank_account_no || '')}</td>
   </tr>
   <tr>
     <td class="label">IBAN No<br><span>رقم البنك الدولي</span></td>
-    <td>${cs?.bank_iban || ''}</td>
+    <td>${escapeHtml(cs?.bank_iban || '')}</td>
     <td style="text-align:center;border-top:0">Signature with Stamp</td>
     <td style="text-align:center;border-top:0">Signature with Stamp</td>
   </tr>
