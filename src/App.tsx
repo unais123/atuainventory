@@ -16,6 +16,7 @@ import Auth from "@/pages/Auth";
 import ServiceJobs from "@/pages/ServiceJobs";
 import Payments from "@/pages/Payments";
 import Settings from "@/pages/Settings";
+import Employees from "@/pages/Employees";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
