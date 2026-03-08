@@ -187,7 +187,7 @@ table th{background:#fff}
 </style></head><body>
 <div class="page"><main>
 <div class="invoice-header">
-  <div class="left">Invoice No / رقم الفاتورة : <span style="color:#b30000">${invoice.invoice_number}</span></div>
+  <div class="left">Invoice No / رقم الفاتورة : <span style="color:#b30000">${escapeHtml(invoice.invoice_number)}</span></div>
   <div class="center">TAX INVOICE / فاتورة ضريبية<br><span style="font-size:11px">${companyNameEn}${companyNameAr ? ' / ' + companyNameAr : ''}</span></div>
   <div class="logo">${logoHtml}</div>
 </div>
@@ -195,11 +195,11 @@ table th{background:#fff}
 <div style="margin-top:2%" class="section">
   <div class="client-header">Client Details / <span>تفاصيل العميل</span></div>
   <table class="full-table">
-    <tr><th>Name</th><td colspan="3" class="bold">${customer?.company_name ?? ""}</td><td colspan="3" class="bold rtl-text"></td><th class="rtl">الاسم</th></tr>
-    <tr><th>Contact</th><td colspan="3">${customer?.contact_person ?? ""}</td><td colspan="3" class="rtl-text"></td><th class="rtl">جهة الاتصال</th></tr>
-    <tr><th>Address</th><td colspan="3">${customer?.address ?? ""}</td><td colspan="3" class="rtl-text"></td><th class="rtl">العنوان</th></tr>
-    <tr><th>Phone</th><td>${customer?.phone ?? ""}</td><th>Email</th><td>${customer?.email ?? ""}</td><td class="rtl-text"></td><th class="rtl">البريد</th><td class="rtl-text"></td><th class="rtl">الهاتف</th></tr>
-    <tr><th>VAT No</th><td colspan="3">${customer?.vat_number ?? ""}</td><td colspan="3" class="rtl-text"></td><th class="rtl">الرقم الضريبي</th></tr>
+    <tr><th>Name</th><td colspan="3" class="bold">${escapeHtml(customer?.company_name ?? "")}</td><td colspan="3" class="bold rtl-text"></td><th class="rtl">الاسم</th></tr>
+    <tr><th>Contact</th><td colspan="3">${escapeHtml(customer?.contact_person ?? "")}</td><td colspan="3" class="rtl-text"></td><th class="rtl">جهة الاتصال</th></tr>
+    <tr><th>Address</th><td colspan="3">${escapeHtml(customer?.address ?? "")}</td><td colspan="3" class="rtl-text"></td><th class="rtl">العنوان</th></tr>
+    <tr><th>Phone</th><td>${escapeHtml(customer?.phone ?? "")}</td><th>Email</th><td>${escapeHtml(customer?.email ?? "")}</td><td class="rtl-text"></td><th class="rtl">البريد</th><td class="rtl-text"></td><th class="rtl">الهاتف</th></tr>
+    <tr><th>VAT No</th><td colspan="3">${escapeHtml(customer?.vat_number ?? "")}</td><td colspan="3" class="rtl-text"></td><th class="rtl">الرقم الضريبي</th></tr>
   </table>
 </div>
 
