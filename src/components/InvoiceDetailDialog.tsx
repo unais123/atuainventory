@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -37,6 +38,11 @@ const fmt = (n: number) => `SAR ${n.toLocaleString("en", { minimumFractionDigits
 
 export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
   const qc = useQueryClient();
+  const [currentStatus, setCurrentStatus] = useState(invoice?.status ?? "");
+
+  useEffect(() => {
+    if (invoice) setCurrentStatus(invoice.status);
+  }, [invoice]);
 
   const statusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
@@ -45,8 +51,10 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
         .update({ status: newStatus as any })
         .eq("id", invoice!.id);
       if (error) throw error;
+      return newStatus;
     },
-    onSuccess: () => {
+    onSuccess: (newStatus) => {
+      setCurrentStatus(newStatus);
       toast.success("Invoice status updated");
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["customer-invoices"] });
