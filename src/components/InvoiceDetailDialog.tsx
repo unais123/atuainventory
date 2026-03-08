@@ -121,21 +121,27 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
     return result + ' Only';
   };
 
+  const escapeHtml = (str: string): string => {
+    const map: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    return str.replace(/[&<>"']/g, (c) => map[c]);
+  };
+
   const handleDownload = () => {
     const cs = companySettings;
     const subtotal = Number(invoice.hardware_total) + Number(invoice.labor_charges) + Number(invoice.service_charges);
     const vatAmount = Number(invoice.vat);
     const total = Number(invoice.total);
-    const logoHtml = cs?.logo_url ? `<img src="${cs.logo_url}" style="max-height:60px;max-width:180px;object-fit:contain" />` : '';
-    const companyNameEn = cs?.company_name || '';
-    const companyNameAr = cs?.company_name_ar || '';
+    const safeLogoUrl = cs?.logo_url ? escapeHtml(cs.logo_url) : '';
+    const logoHtml = safeLogoUrl ? `<img src="${safeLogoUrl}" style="max-height:60px;max-width:180px;object-fit:contain" />` : '';
+    const companyNameEn = escapeHtml(cs?.company_name || '');
+    const companyNameAr = escapeHtml(cs?.company_name_ar || '');
 
     const itemsHtml = items.map((item, idx) => {
       const lineTotal = Number(item.total);
       const lineVat = lineTotal * 0.15;
       return `<tr>
         <td>${idx + 1}</td>
-        <td style="text-align:left">${item.description}</td>
+        <td style="text-align:left">${escapeHtml(item.description)}</td>
         <td>Unit</td>
         <td>${item.quantity}</td>
         <td>${Number(item.unit_price).toFixed(2)}</td>
@@ -181,7 +187,7 @@ table th{background:#fff}
 </style></head><body>
 <div class="page"><main>
 <div class="invoice-header">
-  <div class="left">Invoice No / رقم الفاتورة : <span style="color:#b30000">${invoice.invoice_number}</span></div>
+  <div class="left">Invoice No / رقم الفاتورة : <span style="color:#b30000">${escapeHtml(invoice.invoice_number)}</span></div>
   <div class="center">TAX INVOICE / فاتورة ضريبية<br><span style="font-size:11px">${companyNameEn}${companyNameAr ? ' / ' + companyNameAr : ''}</span></div>
   <div class="logo">${logoHtml}</div>
 </div>
@@ -189,11 +195,11 @@ table th{background:#fff}
 <div style="margin-top:2%" class="section">
   <div class="client-header">Client Details / <span>تفاصيل العميل</span></div>
   <table class="full-table">
-    <tr><th>Name</th><td colspan="3" class="bold">${customer?.company_name ?? ""}</td><td colspan="3" class="bold rtl-text"></td><th class="rtl">الاسم</th></tr>
-    <tr><th>Contact</th><td colspan="3">${customer?.contact_person ?? ""}</td><td colspan="3" class="rtl-text"></td><th class="rtl">جهة الاتصال</th></tr>
-    <tr><th>Address</th><td colspan="3">${customer?.address ?? ""}</td><td colspan="3" class="rtl-text"></td><th class="rtl">العنوان</th></tr>
-    <tr><th>Phone</th><td>${customer?.phone ?? ""}</td><th>Email</th><td>${customer?.email ?? ""}</td><td class="rtl-text"></td><th class="rtl">البريد</th><td class="rtl-text"></td><th class="rtl">الهاتف</th></tr>
-    <tr><th>VAT No</th><td colspan="3">${customer?.vat_number ?? ""}</td><td colspan="3" class="rtl-text"></td><th class="rtl">الرقم الضريبي</th></tr>
+    <tr><th>Name</th><td colspan="3" class="bold">${escapeHtml(customer?.company_name ?? "")}</td><td colspan="3" class="bold rtl-text"></td><th class="rtl">الاسم</th></tr>
+    <tr><th>Contact</th><td colspan="3">${escapeHtml(customer?.contact_person ?? "")}</td><td colspan="3" class="rtl-text"></td><th class="rtl">جهة الاتصال</th></tr>
+    <tr><th>Address</th><td colspan="3">${escapeHtml(customer?.address ?? "")}</td><td colspan="3" class="rtl-text"></td><th class="rtl">العنوان</th></tr>
+    <tr><th>Phone</th><td>${escapeHtml(customer?.phone ?? "")}</td><th>Email</th><td>${escapeHtml(customer?.email ?? "")}</td><td class="rtl-text"></td><th class="rtl">البريد</th><td class="rtl-text"></td><th class="rtl">الهاتف</th></tr>
+    <tr><th>VAT No</th><td colspan="3">${escapeHtml(customer?.vat_number ?? "")}</td><td colspan="3" class="rtl-text"></td><th class="rtl">الرقم الضريبي</th></tr>
   </table>
 </div>
 
@@ -205,8 +211,8 @@ table th{background:#fff}
       <th>Payment Type<br><span>نوع الدفع</span></th>
     </tr>
     <tr>
-      <td>${invoice.date}</td>
-      <td>${invoice.status}</td>
+      <td>${escapeHtml(invoice.date)}</td>
+      <td>${escapeHtml(invoice.status)}</td>
       <td>—</td>
     </tr>
   </table>
@@ -249,21 +255,21 @@ table th{background:#fff}
   </tr>
   <tr>
     <td class="label">Account Name<br><span>إسم الحساب</span></td>
-    <td>${cs?.bank_account_name || ''}</td>
+    <td>${escapeHtml(cs?.bank_account_name || '')}</td>
     <td style="text-align:center;border-bottom:0" rowspan="3"></td>
     <td style="text-align:center;border-bottom:0" rowspan="3"></td>
   </tr>
   <tr>
     <td class="label">Bank Name<br><span>اسم البنك</span></td>
-    <td>${cs?.bank_name || ''}</td>
+    <td>${escapeHtml(cs?.bank_name || '')}</td>
   </tr>
   <tr>
     <td class="label">Account No<br><span>رقم حساب</span></td>
-    <td>${cs?.bank_account_no || ''}</td>
+    <td>${escapeHtml(cs?.bank_account_no || '')}</td>
   </tr>
   <tr>
     <td class="label">IBAN No<br><span>رقم البنك الدولي</span></td>
-    <td>${cs?.bank_iban || ''}</td>
+    <td>${escapeHtml(cs?.bank_iban || '')}</td>
     <td style="text-align:center;border-top:0">Signature with Stamp</td>
     <td style="text-align:center;border-top:0">Signature with Stamp</td>
   </tr>
