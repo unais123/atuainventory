@@ -81,7 +81,7 @@ export default function Suppliers() {
                 {stats && (
                   <div className="flex items-center gap-2 text-xs mt-3 text-primary font-medium">
                     <Package className="h-3 w-3" />
-                    {stats.count} products · {stats.totalQty} units · ₹{stats.totalValue.toLocaleString()}
+                    {stats.count} products · {stats.totalQty} units · SAR {stats.totalValue.toLocaleString()}
                   </div>
                 )}
               </div>
