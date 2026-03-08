@@ -38,7 +38,7 @@ export default function ServiceRequests() {
           <h1 className="page-header">Service Requests</h1>
           <p className="text-sm text-muted-foreground">Track and manage all service requests.</p>
         </div>
-        <Button size="sm"><Plus className="h-4 w-4 mr-1" />New Request</Button>
+        <AddServiceRequestDialog />
       </div>
 
       <div className="relative max-w-sm">
