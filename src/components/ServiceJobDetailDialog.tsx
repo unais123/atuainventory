@@ -1,0 +1,185 @@
+import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Pencil, Trash2 } from "lucide-react";
+import { StatusBadge } from "@/components/StatusBadge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Constants } from "@/integrations/supabase/types";
+import { format } from "date-fns";
+
+interface ServiceJob {
+  id: string;
+  status: string;
+  start_time: string | null;
+  end_time: string | null;
+  service_notes: string | null;
+  service_requests?: {
+    service_type: string;
+    customers?: { company_name: string } | null;
+  } | null;
+}
+
+interface Props {
+  job: ServiceJob | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const STATUSES = Constants.public.Enums.service_job_status;
+
+export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    status: "Scheduled",
+    start_time: "",
+    end_time: "",
+    service_notes: "",
+  });
+
+  useEffect(() => {
+    if (job) {
+      setForm({
+        status: job.status,
+        start_time: job.start_time ? job.start_time.slice(0, 16) : "",
+        end_time: job.end_time ? job.end_time.slice(0, 16) : "",
+        service_notes: job.service_notes || "",
+      });
+    }
+  }, [job]);
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("service_jobs").update({
+        status: form.status as any,
+        start_time: form.start_time || null,
+        end_time: form.end_time || null,
+        service_notes: form.service_notes || null,
+      }).eq("id", job!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Service job updated");
+      qc.invalidateQueries({ queryKey: ["service-jobs"] });
+      setEditing(false);
+      onOpenChange(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("service_jobs").delete().eq("id", job!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Service job deleted");
+      qc.invalidateQueries({ queryKey: ["service-jobs"] });
+      onOpenChange(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  if (!job) return null;
+
+  const customerName = job.service_requests?.customers?.company_name ?? "—";
+  const serviceType = job.service_requests?.service_type ?? "—";
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) setEditing(false); onOpenChange(o); }}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-between pr-8">
+            {editing ? "Edit Service Job" : `${serviceType} — ${customerName}`}
+            {!editing && (
+              <div className="flex gap-1">
+                <Button variant="ghost" size="icon" onClick={() => setEditing(true)}><Pencil className="h-4 w-4" /></Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete service job?</AlertDialogTitle>
+                      <AlertDialogDescription>This will permanently delete this service job.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteMutation.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
+          </DialogTitle>
+          {!editing && <DialogDescription>Service job details</DialogDescription>}
+        </DialogHeader>
+
+        {editing ? (
+          <form onSubmit={(e) => { e.preventDefault(); updateMutation.mutate(); }} className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Input type="datetime-local" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <Input type="datetime-local" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea rows={3} value={form.service_notes} onChange={(e) => setForm({ ...form, service_notes: e.target.value })} />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+              <Button type="submit" disabled={updateMutation.isPending}>{updateMutation.isPending ? "Saving..." : "Save"}</Button>
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div><span className="text-muted-foreground">Customer:</span> {customerName}</div>
+              <div><span className="text-muted-foreground">Service:</span> {serviceType}</div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted-foreground">Status:</span>
+                <StatusBadge status={job.status} />
+              </div>
+              <div><span className="text-muted-foreground">Start:</span> {job.start_time ? format(new Date(job.start_time), "dd MMM yyyy HH:mm") : "—"}</div>
+              <div><span className="text-muted-foreground">End:</span> {job.end_time ? format(new Date(job.end_time), "dd MMM yyyy HH:mm") : "—"}</div>
+            </div>
+            {job.service_notes && (
+              <div className="text-sm">
+                <span className="text-muted-foreground">Notes:</span>
+                <p className="mt-1">{job.service_notes}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
