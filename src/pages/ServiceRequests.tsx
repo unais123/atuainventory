@@ -75,7 +75,7 @@ export default function ServiceRequests() {
               </TableRow>
             ) : (
               requests.map((sr) => (
-                <TableRow key={sr.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow key={sr.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setSelected(sr); setDetailOpen(true); }}>
                   <TableCell className="font-medium">{sr.customers?.company_name ?? "—"}</TableCell>
                   <TableCell>{sr.service_type}</TableCell>
                   <TableCell>
