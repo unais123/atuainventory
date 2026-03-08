@@ -150,9 +150,10 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
 @page{size:A4 portrait;margin:15mm 10mm}
 body{font-family:Arial,sans-serif;margin:0;padding:0}
 .page{width:210mm;min-height:297mm;margin:auto;padding:10mm 5mm 30mm;position:relative;background:#fff;box-sizing:border-box}
-.invoice-header{width:100%;display:flex;align-items:center;padding-bottom:5px}
+.invoice-header{width:100%;display:flex;align-items:center;padding-bottom:5px;justify-content:space-between}
 .invoice-header .left{font-size:12px;color:#b30000;font-weight:bold}
-.invoice-header .right{font-size:15px;color:#2a7cc7;font-weight:bold;text-align:center;margin-left:2%}
+.invoice-header .center{font-size:15px;color:#2a7cc7;font-weight:bold;text-align:center;flex:1}
+.invoice-header .logo{text-align:right}
 .section{margin-bottom:20px}
 .client-header{font-weight:bold;font-size:13px;color:#0074cc;margin-bottom:8px}
 .full-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:10px}
