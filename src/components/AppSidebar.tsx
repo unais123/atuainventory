@@ -89,7 +89,7 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div>
-              <p className="text-sm font-bold text-sidebar-accent-foreground">HGE Service</p>
+              <p className="text-sm font-bold text-sidebar-accent-foreground">Delta Industries</p>
               <p className="text-xs text-sidebar-foreground/50">Inventory & Billing</p>
             </div>
           )}
