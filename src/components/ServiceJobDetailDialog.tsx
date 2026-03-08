@@ -29,6 +29,7 @@ interface ServiceJob {
   start_time: string | null;
   end_time: string | null;
   service_notes: string | null;
+  service_request_id: string;
   employee_id: string | null;
   service_job_employees?: { employee_id: string; employees: { name: string; role: string } }[];
   service_requests?: {
