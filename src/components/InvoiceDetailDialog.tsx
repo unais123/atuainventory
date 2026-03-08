@@ -91,6 +91,16 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
     enabled: !!invoice && open,
   });
 
+  const { data: companySettings } = useQuery({
+    queryKey: ["company_settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("company_settings").select("*").limit(1).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   if (!invoice) return null;
 
   const numberToWords = (num: number): string => {
@@ -112,9 +122,13 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
   };
 
   const handleDownload = () => {
+    const cs = companySettings;
     const subtotal = Number(invoice.hardware_total) + Number(invoice.labor_charges) + Number(invoice.service_charges);
     const vatAmount = Number(invoice.vat);
     const total = Number(invoice.total);
+    const logoHtml = cs?.logo_url ? `<img src="${cs.logo_url}" style="max-height:60px;max-width:180px;object-fit:contain" />` : '';
+    const companyNameEn = cs?.company_name || '';
+    const companyNameAr = cs?.company_name_ar || '';
 
     const itemsHtml = items.map((item, idx) => {
       const lineTotal = Number(item.total);
@@ -136,9 +150,10 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
 @page{size:A4 portrait;margin:15mm 10mm}
 body{font-family:Arial,sans-serif;margin:0;padding:0}
 .page{width:210mm;min-height:297mm;margin:auto;padding:10mm 5mm 30mm;position:relative;background:#fff;box-sizing:border-box}
-.invoice-header{width:100%;display:flex;align-items:center;padding-bottom:5px}
+.invoice-header{width:100%;display:flex;align-items:center;padding-bottom:5px;justify-content:space-between}
 .invoice-header .left{font-size:12px;color:#b30000;font-weight:bold}
-.invoice-header .right{font-size:15px;color:#2a7cc7;font-weight:bold;text-align:center;margin-left:2%}
+.invoice-header .center{font-size:15px;color:#2a7cc7;font-weight:bold;text-align:center;flex:1}
+.invoice-header .logo{text-align:right}
 .section{margin-bottom:20px}
 .client-header{font-weight:bold;font-size:13px;color:#0074cc;margin-bottom:8px}
 .full-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:10px}
@@ -167,7 +182,8 @@ table th{background:#fff}
 <div class="page"><main>
 <div class="invoice-header">
   <div class="left">Invoice No / رقم الفاتورة : <span style="color:#b30000">${invoice.invoice_number}</span></div>
-  <div class="right">TAX INVOICE / فاتورة ضريبية</div>
+  <div class="center">TAX INVOICE / فاتورة ضريبية<br><span style="font-size:11px">${companyNameEn}${companyNameAr ? ' / ' + companyNameAr : ''}</span></div>
+  <div class="logo">${logoHtml}</div>
 </div>
 
 <div style="margin-top:2%" class="section">
@@ -233,21 +249,21 @@ table th{background:#fff}
   </tr>
   <tr>
     <td class="label">Account Name<br><span>إسم الحساب</span></td>
-    <td>GRAY LANE TRADING COMPANY<br><span>شركة الممر الرمادي التجارية</span></td>
+    <td>${cs?.bank_account_name || ''}</td>
     <td style="text-align:center;border-bottom:0" rowspan="3"></td>
     <td style="text-align:center;border-bottom:0" rowspan="3"></td>
   </tr>
   <tr>
     <td class="label">Bank Name<br><span>اسم البنك</span></td>
-    <td>SAUDI BRITISH BANK</td>
+    <td>${cs?.bank_name || ''}</td>
   </tr>
   <tr>
     <td class="label">Account No<br><span>رقم حساب</span></td>
-    <td>262-353493-001</td>
+    <td>${cs?.bank_account_no || ''}</td>
   </tr>
   <tr>
     <td class="label">IBAN No<br><span>رقم البنك الدولي</span></td>
-    <td>SA70 4500 0000 2623 5349 3001</td>
+    <td>${cs?.bank_iban || ''}</td>
     <td style="text-align:center;border-top:0">Signature with Stamp</td>
     <td style="text-align:center;border-top:0">Signature with Stamp</td>
   </tr>
