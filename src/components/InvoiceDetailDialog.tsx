@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -37,6 +38,11 @@ const fmt = (n: number) => `SAR ${n.toLocaleString("en", { minimumFractionDigits
 
 export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
   const qc = useQueryClient();
+  const [currentStatus, setCurrentStatus] = useState(invoice?.status ?? "");
+
+  useEffect(() => {
+    if (invoice) setCurrentStatus(invoice.status);
+  }, [invoice]);
 
   const statusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
@@ -45,8 +51,10 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
         .update({ status: newStatus as any })
         .eq("id", invoice!.id);
       if (error) throw error;
+      return newStatus;
     },
-    onSuccess: () => {
+    onSuccess: (newStatus) => {
+      setCurrentStatus(newStatus);
       toast.success("Invoice status updated");
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["customer-invoices"] });
@@ -131,7 +139,7 @@ th.right,td.right{text-align:right}tbody td{padding:12px;font-size:14px;border-b
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             Invoice {invoice.invoice_number}
-            <StatusBadge status={invoice.status} />
+            <StatusBadge status={currentStatus} />
           </DialogTitle>
           <DialogDescription>Invoice details and line items</DialogDescription>
         </DialogHeader>
@@ -153,7 +161,7 @@ th.right,td.right{text-align:right}tbody td{padding:12px;font-size:14px;border-b
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground text-xs">Status:</span>
               <Select
-                value={invoice.status}
+                value={currentStatus}
                 onValueChange={(v) => statusMutation.mutate(v)}
                 disabled={statusMutation.isPending}
               >
