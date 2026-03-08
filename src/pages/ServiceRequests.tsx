@@ -1,6 +1,6 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-// cleaned unused import
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { AddServiceRequestDialog } from "@/components/AddServiceRequestDialog";
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ServiceRequestDetailDialog } from "@/components/ServiceRequestDetailDialog";
 
 const priorityStyles: Record<string, string> = {
   Low: "bg-muted text-muted-foreground",
@@ -19,6 +20,8 @@ const priorityStyles: Record<string, string> = {
 };
 
 export default function ServiceRequests() {
+  const [selected, setSelected] = useState<any>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["service_requests"],
     queryFn: async () => {
@@ -72,7 +75,7 @@ export default function ServiceRequests() {
               </TableRow>
             ) : (
               requests.map((sr) => (
-                <TableRow key={sr.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow key={sr.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setSelected(sr); setDetailOpen(true); }}>
                   <TableCell className="font-medium">{sr.customers?.company_name ?? "—"}</TableCell>
                   <TableCell>{sr.service_type}</TableCell>
                   <TableCell>
@@ -86,6 +89,8 @@ export default function ServiceRequests() {
           </TableBody>
         </Table>
       </div>
+
+      <ServiceRequestDetailDialog request={selected} open={detailOpen} onOpenChange={setDetailOpen} />
     </div>
   );
 }
