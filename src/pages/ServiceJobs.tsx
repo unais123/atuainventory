@@ -20,12 +20,15 @@ export default function ServiceJobs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_jobs")
-        .select("*, service_requests(service_type, customers(company_name)), employees(name, role)")
+        .select("*, service_requests(service_type, customers(company_name)), service_job_employees(employee_id, employees(name, role))")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
+
+  const getEmployeeNames = (j: any) =>
+    (j.service_job_employees || []).map((sje: any) => sje.employees?.name).filter(Boolean).join(", ");
 
   const filtered = jobs.filter((j: any) => {
     const q = search.toLowerCase();
@@ -34,7 +37,7 @@ export default function ServiceJobs() {
       (j.service_requests?.customers?.company_name ?? "").toLowerCase().includes(q) ||
       (j.service_requests?.service_type ?? "").toLowerCase().includes(q) ||
       (j.status ?? "").toLowerCase().includes(q) ||
-      (j.employees?.name ?? "").toLowerCase().includes(q) ||
+      getEmployeeNames(j).toLowerCase().includes(q) ||
       (j.service_notes ?? "").toLowerCase().includes(q)
     );
   });
@@ -67,7 +70,7 @@ export default function ServiceJobs() {
               <TableRow>
                 <TableHead>Customer</TableHead>
                 <TableHead>Service Type</TableHead>
-                <TableHead>Employee</TableHead>
+                <TableHead>Employees</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Start</TableHead>
                 <TableHead>End</TableHead>
@@ -81,7 +84,7 @@ export default function ServiceJobs() {
                     {j.service_requests?.customers?.company_name ?? "—"}
                   </TableCell>
                   <TableCell>{j.service_requests?.service_type ?? "—"}</TableCell>
-                  <TableCell>{j.employees?.name ?? "—"}</TableCell>
+                  <TableCell className="text-sm">{getEmployeeNames(j) || "—"}</TableCell>
                   <TableCell><StatusBadge status={j.status} /></TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {j.start_time ? format(new Date(j.start_time), "dd MMM yyyy") : "—"}

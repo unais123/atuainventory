@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Pencil, Trash2 } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -28,7 +30,7 @@ interface ServiceJob {
   end_time: string | null;
   service_notes: string | null;
   employee_id: string | null;
-  employees?: { name: string; role: string } | null;
+  service_job_employees?: { employee_id: string; employees: { name: string; role: string } }[];
   service_requests?: {
     service_type: string;
     customers?: { company_name: string } | null;
@@ -48,7 +50,7 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     status: "Scheduled",
-    employee_id: "",
+    employee_ids: [] as string[],
     start_time: "",
     end_time: "",
     service_notes: "",
@@ -67,9 +69,10 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
 
   useEffect(() => {
     if (job) {
+      const empIds = (job.service_job_employees || []).map((sje: any) => sje.employee_id);
       setForm({
         status: job.status,
-        employee_id: job.employee_id || "",
+        employee_ids: empIds,
         start_time: job.start_time ? job.start_time.slice(0, 16) : "",
         end_time: job.end_time ? job.end_time.slice(0, 16) : "",
         service_notes: job.service_notes || "",
@@ -77,16 +80,35 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
     }
   }, [job]);
 
+  const toggleEmployee = (id: string) => {
+    setForm((f) => ({
+      ...f,
+      employee_ids: f.employee_ids.includes(id)
+        ? f.employee_ids.filter((e) => e !== id)
+        : [...f.employee_ids, id],
+    }));
+  };
+
   const updateMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("service_jobs").update({
         status: form.status as any,
-        employee_id: form.employee_id || null,
         start_time: form.start_time || null,
         end_time: form.end_time || null,
         service_notes: form.service_notes || null,
       }).eq("id", job!.id);
       if (error) throw error;
+
+      // Sync employees: delete all, re-insert
+      await supabase.from("service_job_employees").delete().eq("service_job_id", job!.id);
+      if (form.employee_ids.length > 0) {
+        const rows = form.employee_ids.map((eid) => ({
+          service_job_id: job!.id,
+          employee_id: eid,
+        }));
+        const { error: linkError } = await supabase.from("service_job_employees").insert(rows);
+        if (linkError) throw linkError;
+      }
     },
     onSuccess: () => {
       toast.success("Service job updated");
@@ -114,7 +136,7 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
 
   const customerName = job.service_requests?.customers?.company_name ?? "—";
   const serviceType = job.service_requests?.service_type ?? "—";
-  const employeeName = job.employees?.name ?? "—";
+  const assignedEmployees = (job.service_job_employees || []).map((sje: any) => sje.employees);
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) setEditing(false); onOpenChange(o); }}>
@@ -158,17 +180,22 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Assigned Employee</Label>
-              <Select value={form.employee_id} onValueChange={(v) => setForm({ ...form, employee_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
-                <SelectContent>
-                  {employees.map((emp: any) => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.name} {emp.role ? `(${emp.role})` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Assigned Employees</Label>
+              <div className="border rounded-md p-3 max-h-40 overflow-y-auto space-y-2">
+                {employees.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No active employees</p>
+                ) : (
+                  employees.map((emp: any) => (
+                    <label key={emp.id} className="flex items-center gap-2 cursor-pointer text-sm">
+                      <Checkbox
+                        checked={form.employee_ids.includes(emp.id)}
+                        onCheckedChange={() => toggleEmployee(emp.id)}
+                      />
+                      {emp.name} <span className="text-muted-foreground">({emp.role})</span>
+                    </label>
+                  ))
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -198,9 +225,20 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
                 <span className="text-muted-foreground">Status:</span>
                 <StatusBadge status={job.status} />
               </div>
-              <div><span className="text-muted-foreground">Employee:</span> {employeeName}</div>
               <div><span className="text-muted-foreground">Start:</span> {job.start_time ? format(new Date(job.start_time), "dd MMM yyyy HH:mm") : "—"}</div>
               <div><span className="text-muted-foreground">End:</span> {job.end_time ? format(new Date(job.end_time), "dd MMM yyyy HH:mm") : "—"}</div>
+            </div>
+            <div className="text-sm">
+              <span className="text-muted-foreground">Employees:</span>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {assignedEmployees.length === 0 ? (
+                  <span className="text-muted-foreground">—</span>
+                ) : (
+                  assignedEmployees.map((emp: any, i: number) => (
+                    <Badge key={i} variant="secondary">{emp.name}</Badge>
+                  ))
+                )}
+              </div>
             </div>
             {job.service_notes && (
               <div className="text-sm">
