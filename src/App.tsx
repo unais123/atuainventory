@@ -10,6 +10,7 @@ import Customers from "@/pages/Customers";
 import ServiceRequests from "@/pages/ServiceRequests";
 import Invoices from "@/pages/Invoices";
 import Suppliers from "@/pages/Suppliers";
+import Reports from "@/pages/Reports";
 import PlaceholderPage from "@/pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 
