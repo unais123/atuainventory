@@ -1,6 +1,6 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-// cleaned unused import
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { AddServiceRequestDialog } from "@/components/AddServiceRequestDialog";
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ServiceRequestDetailDialog } from "@/components/ServiceRequestDetailDialog";
 
 const priorityStyles: Record<string, string> = {
   Low: "bg-muted text-muted-foreground",
