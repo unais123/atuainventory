@@ -13,7 +13,9 @@ import Invoices from "@/pages/Invoices";
 import Suppliers from "@/pages/Suppliers";
 import Reports from "@/pages/Reports";
 import Auth from "@/pages/Auth";
-import PlaceholderPage from "@/pages/PlaceholderPage";
+import ServiceJobs from "@/pages/ServiceJobs";
+import Payments from "@/pages/Payments";
+import Settings from "@/pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
