@@ -36,6 +36,23 @@ interface Props {
 const fmt = (n: number) => `SAR ${n.toLocaleString("en", { minimumFractionDigits: 2 })}`;
 
 export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
+  const qc = useQueryClient();
+
+  const statusMutation = useMutation({
+    mutationFn: async (newStatus: string) => {
+      const { error } = await supabase
+        .from("invoices")
+        .update({ status: newStatus as any })
+        .eq("id", invoice!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Invoice status updated");
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["customer-invoices"] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["invoice-items", invoice?.id],
     queryFn: async () => {
