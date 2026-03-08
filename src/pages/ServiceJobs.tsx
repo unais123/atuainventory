@@ -20,7 +20,7 @@ export default function ServiceJobs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_jobs")
-        .select("*, service_requests(service_type, customers(company_name))")
+        .select("*, service_requests(service_type, customers(company_name)), employees(name, role)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -34,6 +34,7 @@ export default function ServiceJobs() {
       (j.service_requests?.customers?.company_name ?? "").toLowerCase().includes(q) ||
       (j.service_requests?.service_type ?? "").toLowerCase().includes(q) ||
       (j.status ?? "").toLowerCase().includes(q) ||
+      (j.employees?.name ?? "").toLowerCase().includes(q) ||
       (j.service_notes ?? "").toLowerCase().includes(q)
     );
   });
@@ -66,6 +67,7 @@ export default function ServiceJobs() {
               <TableRow>
                 <TableHead>Customer</TableHead>
                 <TableHead>Service Type</TableHead>
+                <TableHead>Employee</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Start</TableHead>
                 <TableHead>End</TableHead>
@@ -79,6 +81,7 @@ export default function ServiceJobs() {
                     {j.service_requests?.customers?.company_name ?? "—"}
                   </TableCell>
                   <TableCell>{j.service_requests?.service_type ?? "—"}</TableCell>
+                  <TableCell>{j.employees?.name ?? "—"}</TableCell>
                   <TableCell><StatusBadge status={j.status} /></TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {j.start_time ? format(new Date(j.start_time), "dd MMM yyyy") : "—"}
