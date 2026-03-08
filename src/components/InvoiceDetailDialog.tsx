@@ -139,7 +139,7 @@ th.right,td.right{text-align:right}tbody td{padding:12px;font-size:14px;border-b
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             Invoice {invoice.invoice_number}
-            <StatusBadge status={invoice.status} />
+            <StatusBadge status={currentStatus} />
           </DialogTitle>
           <DialogDescription>Invoice details and line items</DialogDescription>
         </DialogHeader>
