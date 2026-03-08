@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Inventory() {
+  const [selected, setSelected] = useState<any>(null);
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["inventory"],
     queryFn: async () => {
