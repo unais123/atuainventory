@@ -409,6 +409,42 @@ export type Database = {
         }
         Relationships: []
       }
+      service_job_employees: {
+        Row: {
+          created_at: string
+          employee_id: string
+          id: string
+          service_job_id: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          id?: string
+          service_job_id: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          id?: string
+          service_job_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_job_employees_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_job_employees_service_job_id_fkey"
+            columns: ["service_job_id"]
+            isOneToOne: false
+            referencedRelation: "service_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_job_items: {
         Row: {
           created_at: string
