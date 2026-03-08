@@ -121,21 +121,27 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
     return result + ' Only';
   };
 
+  const escapeHtml = (str: string): string => {
+    const map: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    return str.replace(/[&<>"']/g, (c) => map[c]);
+  };
+
   const handleDownload = () => {
     const cs = companySettings;
     const subtotal = Number(invoice.hardware_total) + Number(invoice.labor_charges) + Number(invoice.service_charges);
     const vatAmount = Number(invoice.vat);
     const total = Number(invoice.total);
-    const logoHtml = cs?.logo_url ? `<img src="${cs.logo_url}" style="max-height:60px;max-width:180px;object-fit:contain" />` : '';
-    const companyNameEn = cs?.company_name || '';
-    const companyNameAr = cs?.company_name_ar || '';
+    const safeLogoUrl = cs?.logo_url ? escapeHtml(cs.logo_url) : '';
+    const logoHtml = safeLogoUrl ? `<img src="${safeLogoUrl}" style="max-height:60px;max-width:180px;object-fit:contain" />` : '';
+    const companyNameEn = escapeHtml(cs?.company_name || '');
+    const companyNameAr = escapeHtml(cs?.company_name_ar || '');
 
     const itemsHtml = items.map((item, idx) => {
       const lineTotal = Number(item.total);
       const lineVat = lineTotal * 0.15;
       return `<tr>
         <td>${idx + 1}</td>
-        <td style="text-align:left">${item.description}</td>
+        <td style="text-align:left">${escapeHtml(item.description)}</td>
         <td>Unit</td>
         <td>${item.quantity}</td>
         <td>${Number(item.unit_price).toFixed(2)}</td>
