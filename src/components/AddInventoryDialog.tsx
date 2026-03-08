@@ -22,6 +22,7 @@ const defaultForm = {
   quantity: "",
   min_stock: "",
   warehouse: "",
+  supplier_id: "",
 };
 
 export function AddInventoryDialog() {
