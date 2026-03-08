@@ -13,7 +13,9 @@ import Invoices from "@/pages/Invoices";
 import Suppliers from "@/pages/Suppliers";
 import Reports from "@/pages/Reports";
 import Auth from "@/pages/Auth";
-import PlaceholderPage from "@/pages/PlaceholderPage";
+import ServiceJobs from "@/pages/ServiceJobs";
+import Payments from "@/pages/Payments";
+import Settings from "@/pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,12 +40,12 @@ function ProtectedRoutes() {
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/customers" element={<Customers />} />
         <Route path="/service-requests" element={<ServiceRequests />} />
-        <Route path="/service-jobs" element={<PlaceholderPage title="Service Jobs" />} />
+        <Route path="/service-jobs" element={<ServiceJobs />} />
         <Route path="/invoices" element={<Invoices />} />
-        <Route path="/payments" element={<PlaceholderPage title="Payments" />} />
+        <Route path="/payments" element={<Payments />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/suppliers" element={<Suppliers />} />
-        <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </DashboardLayout>
