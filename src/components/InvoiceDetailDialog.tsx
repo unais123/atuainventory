@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -32,8 +31,6 @@ interface Props {
 const fmt = (n: number) => `SAR ${n.toLocaleString("en", { minimumFractionDigits: 2 })}`;
 
 export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
-  const printRef = useRef<HTMLDivElement>(null);
-
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["invoice-items", invoice?.id],
     queryFn: async () => {
@@ -67,53 +64,44 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
   if (!invoice) return null;
 
   const handleDownload = () => {
-    if (!printRef.current) return;
-    const printContent = printRef.current.innerHTML;
+    const statusClass = invoice.status === "Paid" ? "paid" : invoice.status === "Overdue" ? "overdue" : "";
+    const itemsHtml = items.map((item, idx) => `
+      <tr><td>${idx + 1}</td><td>${item.description}</td><td class="right">${item.quantity}</td><td class="right">${fmt(Number(item.unit_price))}</td><td class="right">${fmt(Number(item.total))}</td></tr>
+    `).join("");
+
+    const laborRow = Number(invoice.labor_charges) > 0 ? `<div class="totals-row"><span class="label">Labor</span><span>${fmt(Number(invoice.labor_charges))}</span></div>` : "";
+    const serviceRow = Number(invoice.service_charges) > 0 ? `<div class="totals-row"><span class="label">Service</span><span>${fmt(Number(invoice.service_charges))}</span></div>` : "";
+
+    const html = `<!DOCTYPE html><html><head><title>Invoice ${invoice.invoice_number}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',system-ui,sans-serif;color:#1a1a1a;padding:40px;max-width:800px;margin:0 auto}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #e5e7eb}
+.title{font-size:28px;font-weight:700}.inv-num{font-size:14px;color:#6b7280;margin-top:4px;font-family:monospace}
+.status{display:inline-block;padding:4px 12px;border-radius:9999px;font-size:12px;font-weight:600;background:#dbeafe;color:#1d4ed8}
+.status.paid{background:#dcfce7;color:#16a34a}.status.overdue{background:#fee2e2;color:#dc2626}
+.section{margin-bottom:24px}.section-title{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;font-weight:600;margin-bottom:8px}
+.cust-info{font-size:14px;line-height:1.6}.cust-name{font-weight:600;font-size:15px}
+.meta{display:flex;gap:48px;margin-bottom:24px}.meta label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;font-weight:600}.meta span{display:block;font-size:14px;margin-top:2px}
+table{width:100%;border-collapse:collapse;margin-bottom:24px}thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;font-weight:600;padding:10px 12px;border-bottom:2px solid #e5e7eb}
+th.right,td.right{text-align:right}tbody td{padding:12px;font-size:14px;border-bottom:1px solid #f3f4f6}
+.totals{margin-left:auto;width:280px}.totals-row{display:flex;justify-content:space-between;padding:6px 0;font-size:14px}.totals-row .label{color:#6b7280}
+.totals-row.total{font-weight:700;font-size:16px;padding-top:10px;margin-top:6px;border-top:2px solid #111}
+.footer{margin-top:48px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;font-size:12px;color:#9ca3af}
+@media print{body{padding:20px}}
+</style></head><body>
+<div class="header"><div><div class="title">INVOICE</div><div class="inv-num">${invoice.invoice_number}</div></div><div class="status ${statusClass}">${invoice.status}</div></div>
+<div class="meta"><div><label>Date</label><span>${invoice.date}</span></div></div>
+<div class="section"><div class="section-title">Bill To</div><div class="cust-info"><div class="cust-name">${customer?.company_name ?? ""}</div>${customer?.contact_person ? `<div>${customer.contact_person}</div>` : ""}${customer?.email ? `<div>${customer.email}</div>` : ""}${customer?.phone ? `<div>${customer.phone}</div>` : ""}${customer?.address ? `<div>${customer.address}</div>` : ""}${customer?.vat_number ? `<div>VAT: ${customer.vat_number}</div>` : ""}</div></div>
+<table><thead><tr><th>#</th><th>Description</th><th class="right">Qty</th><th class="right">Unit Price</th><th class="right">Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
+<div class="totals"><div class="totals-row"><span class="label">Hardware</span><span>${fmt(Number(invoice.hardware_total))}</span></div>${laborRow}${serviceRow}<div class="totals-row"><span class="label">VAT (15%)</span><span>${fmt(Number(invoice.vat))}</span></div><div class="totals-row total"><span>Total</span><span>${fmt(Number(invoice.total))}</span></div></div>
+<div class="footer">Thank you for your business</div>
+<script>window.onload=function(){window.print()}</script></body></html>`;
+
     const win = window.open("", "_blank", "width=800,height=900");
     if (!win) return;
-    win.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Invoice ${invoice.invoice_number}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #1a1a1a; padding: 40px; max-width: 800px; margin: 0 auto; }
-          .invoice-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid #e5e7eb; }
-          .invoice-title { font-size: 28px; font-weight: 700; color: #111; }
-          .invoice-number { font-size: 14px; color: #6b7280; margin-top: 4px; font-family: monospace; }
-          .invoice-status { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #dbeafe; color: #1d4ed8; }
-          .invoice-status.paid { background: #dcfce7; color: #16a34a; }
-          .invoice-status.overdue { background: #fee2e2; color: #dc2626; }
-          .section { margin-bottom: 24px; }
-          .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; font-weight: 600; margin-bottom: 8px; }
-          .customer-info { font-size: 14px; line-height: 1.6; }
-          .customer-name { font-weight: 600; font-size: 15px; }
-          .meta-row { display: flex; gap: 48px; margin-bottom: 24px; }
-          .meta-item label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; font-weight: 600; }
-          .meta-item span { display: block; font-size: 14px; margin-top: 2px; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-          thead th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; font-weight: 600; padding: 10px 12px; border-bottom: 2px solid #e5e7eb; }
-          thead th.right { text-align: right; }
-          tbody td { padding: 12px; font-size: 14px; border-bottom: 1px solid #f3f4f6; }
-          tbody td.right { text-align: right; font-variant-numeric: tabular-nums; }
-          .totals { margin-left: auto; width: 280px; }
-          .totals-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
-          .totals-row.label { color: #6b7280; }
-          .totals-row.total { font-weight: 700; font-size: 16px; padding-top: 10px; margin-top: 6px; border-top: 2px solid #111; }
-          .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #9ca3af; }
-          @media print { body { padding: 20px; } }
-        </style>
-      </head>
-      <body>${printContent}
-        <script>window.onload = function() { window.print(); }</script>
-      </body>
-      </html>
-    `);
+    win.document.write(html);
     win.document.close();
   };
-
-  const statusClass = invoice.status === "Paid" ? "paid" : invoice.status === "Overdue" ? "overdue" : "";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -127,7 +115,6 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
         </DialogHeader>
 
         <div className="space-y-5 py-2">
-          {/* Customer info */}
           {customer && (
             <div className="rounded-lg border bg-muted/30 p-4 text-sm space-y-1">
               <p className="font-semibold">{customer.company_name}</p>
@@ -143,7 +130,6 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
             <div><span className="text-muted-foreground">Date:</span> {invoice.date}</div>
           </div>
 
-          {/* Line items */}
           <div>
             <h3 className="text-sm font-semibold mb-2">Items</h3>
             <div className="rounded-lg border overflow-auto">
@@ -186,7 +172,6 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          {/* Totals */}
           <div className="rounded-lg border bg-muted/50 p-4 space-y-1.5 text-sm max-w-xs ml-auto">
             <div className="flex justify-between"><span className="text-muted-foreground">Hardware</span><span>{fmt(Number(invoice.hardware_total))}</span></div>
             {Number(invoice.labor_charges) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Labor</span><span>{fmt(Number(invoice.labor_charges))}</span></div>}
@@ -198,71 +183,6 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
           <Button onClick={handleDownload} className="w-full">
             <Download className="h-4 w-4 mr-1" />Download Invoice
           </Button>
-        </div>
-
-        {/* Hidden printable invoice */}
-        <div className="hidden">
-          <div ref={printRef}>
-            <div class="invoice-header">
-              <div>
-                <div class="invoice-title">INVOICE</div>
-                <div class="invoice-number">{invoice.invoice_number}</div>
-              </div>
-              <div class="invoice-status ${statusClass}">{invoice.status}</div>
-            </div>
-
-            <div class="meta-row">
-              <div class="meta-item">
-                <label>Date</label>
-                <span>{invoice.date}</span>
-              </div>
-            </div>
-
-            <div class="section">
-              <div class="section-title">Bill To</div>
-              <div class="customer-info">
-                <div class="customer-name">{customer?.company_name}</div>
-                {customer?.contact_person && <div>{customer.contact_person}</div>}
-                {customer?.email && <div>{customer.email}</div>}
-                {customer?.phone && <div>{customer.phone}</div>}
-                {customer?.address && <div>{customer.address}</div>}
-                {customer?.vat_number && <div>VAT: {customer.vat_number}</div>}
-              </div>
-            </div>
-
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Description</th>
-                  <th class="right">Qty</th>
-                  <th class="right">Unit Price</th>
-                  <th class="right">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item, idx) => (
-                  <tr key={item.id}>
-                    <td>{idx + 1}</td>
-                    <td>{item.description}</td>
-                    <td class="right">{item.quantity}</td>
-                    <td class="right">{fmt(Number(item.unit_price))}</td>
-                    <td class="right">{fmt(Number(item.total))}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div class="totals">
-              <div class="totals-row"><span class="label">Hardware</span><span>{fmt(Number(invoice.hardware_total))}</span></div>
-              {Number(invoice.labor_charges) > 0 && <div class="totals-row"><span class="label">Labor</span><span>{fmt(Number(invoice.labor_charges))}</span></div>}
-              {Number(invoice.service_charges) > 0 && <div class="totals-row"><span class="label">Service</span><span>{fmt(Number(invoice.service_charges))}</span></div>}
-              <div class="totals-row"><span class="label">VAT (15%)</span><span>{fmt(Number(invoice.vat))}</span></div>
-              <div class="totals-row total"><span>Total</span><span>{fmt(Number(invoice.total))}</span></div>
-            </div>
-
-            <div class="footer">Thank you for your business</div>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
