@@ -211,8 +211,8 @@ table th{background:#fff}
       <th>Payment Type<br><span>نوع الدفع</span></th>
     </tr>
     <tr>
-      <td>${invoice.date}</td>
-      <td>${invoice.status}</td>
+      <td>${escapeHtml(invoice.date)}</td>
+      <td>${escapeHtml(invoice.status)}</td>
       <td>—</td>
     </tr>
   </table>
