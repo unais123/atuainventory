@@ -1,4 +1,5 @@
-import { invoices } from "@/lib/mock-data";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Download } from "lucide-react";
@@ -6,10 +7,23 @@ import { StatusBadge } from "@/components/StatusBadge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const fmt = (n: number) => `SAR ${n.toLocaleString("en", { minimumFractionDigits: 2 })}`;
 
 export default function Invoices() {
+  const { data: invoices = [], isLoading } = useQuery({
+    queryKey: ["invoices"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("*, customers(company_name)")
+        .order("date", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -34,7 +48,6 @@ export default function Invoices() {
             <TableRow>
               <TableHead>Invoice #</TableHead>
               <TableHead>Customer</TableHead>
-              <TableHead>Job Ref</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Hardware</TableHead>
               <TableHead className="text-right">Service</TableHead>
@@ -44,19 +57,32 @@ export default function Invoices() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invoices.map((inv) => (
-              <TableRow key={inv.id} className="cursor-pointer hover:bg-muted/50">
-                <TableCell className="font-mono text-xs">{inv.id}</TableCell>
-                <TableCell className="font-medium">{inv.customer}</TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground">{inv.jobRef}</TableCell>
-                <TableCell className="text-muted-foreground">{inv.date}</TableCell>
-                <TableCell className="text-right">{fmt(inv.hardware)}</TableCell>
-                <TableCell className="text-right">{fmt(inv.service)}</TableCell>
-                <TableCell className="text-right text-muted-foreground">{fmt(inv.vat)}</TableCell>
-                <TableCell className="text-right font-semibold">{fmt(inv.total)}</TableCell>
-                <TableCell><StatusBadge status={inv.status} /></TableCell>
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <TableRow key={i}>
+                  {Array.from({ length: 8 }).map((_, j) => (
+                    <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : invoices.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">No invoices yet.</TableCell>
               </TableRow>
-            ))}
+            ) : (
+              invoices.map((inv) => (
+                <TableRow key={inv.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell className="font-mono text-xs">{inv.invoice_number}</TableCell>
+                  <TableCell className="font-medium">{inv.customers?.company_name ?? "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{inv.date}</TableCell>
+                  <TableCell className="text-right">{fmt(Number(inv.hardware_total))}</TableCell>
+                  <TableCell className="text-right">{fmt(Number(inv.service_charges))}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">{fmt(Number(inv.vat))}</TableCell>
+                  <TableCell className="text-right font-semibold">{fmt(Number(inv.total))}</TableCell>
+                  <TableCell><StatusBadge status={inv.status} /></TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
