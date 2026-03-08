@@ -14,16 +14,530 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      customers: {
+        Row: {
+          address: string | null
+          company_name: string
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          vat_number: string | null
+        }
+        Insert: {
+          address?: string | null
+          company_name: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          vat_number?: string | null
+        }
+        Update: {
+          address?: string | null
+          company_name?: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          vat_number?: string | null
+        }
+        Relationships: []
+      }
+      inventory: {
+        Row: {
+          brand: string | null
+          category: string | null
+          created_at: string
+          id: string
+          item_name: string
+          min_stock: number
+          model: string | null
+          purchase_price: number
+          quantity: number
+          selling_price: number
+          serial_number: string | null
+          supplier_id: string | null
+          updated_at: string
+          warehouse: string | null
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          item_name: string
+          min_stock?: number
+          model?: string | null
+          purchase_price?: number
+          quantity?: number
+          selling_price?: number
+          serial_number?: string | null
+          supplier_id?: string | null
+          updated_at?: string
+          warehouse?: string | null
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          item_name?: string
+          min_stock?: number
+          model?: string | null
+          purchase_price?: number
+          quantity?: number
+          selling_price?: number
+          serial_number?: string | null
+          supplier_id?: string | null
+          updated_at?: string
+          warehouse?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_transactions: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_id: string
+          notes: string | null
+          performed_by: string | null
+          quantity: number
+          reference: string | null
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_id: string
+          notes?: string | null
+          performed_by?: string | null
+          quantity: number
+          reference?: string | null
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_id?: string
+          notes?: string | null
+          performed_by?: string | null
+          quantity?: number
+          reference?: string | null
+          transaction_type?: Database["public"]["Enums"]["transaction_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transactions_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          quantity?: number
+          total?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          total?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          created_at: string
+          customer_id: string
+          date: string
+          hardware_total: number
+          id: string
+          invoice_number: string
+          labor_charges: number
+          service_charges: number
+          service_job_id: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          total: number
+          updated_at: string
+          vat: number
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          date?: string
+          hardware_total?: number
+          id?: string
+          invoice_number: string
+          labor_charges?: number
+          service_charges?: number
+          service_job_id?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          total?: number
+          updated_at?: string
+          vat?: number
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          date?: string
+          hardware_total?: number
+          id?: string
+          invoice_number?: string
+          labor_charges?: number
+          service_charges?: number
+          service_job_id?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          total?: number
+          updated_at?: string
+          vat?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_service_job_id_fkey"
+            columns: ["service_job_id"]
+            isOneToOne: false
+            referencedRelation: "service_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          invoice_id: string
+          notes: string | null
+          payment_date: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          reference: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          reference?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      service_job_items: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_id: string
+          quantity: number
+          service_job_id: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_id: string
+          quantity?: number
+          service_job_id: string
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_id?: string
+          quantity?: number
+          service_job_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_job_items_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_job_items_service_job_id_fkey"
+            columns: ["service_job_id"]
+            isOneToOne: false
+            referencedRelation: "service_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_jobs: {
+        Row: {
+          created_at: string
+          end_time: string | null
+          id: string
+          service_notes: string | null
+          service_request_id: string
+          start_time: string | null
+          status: Database["public"]["Enums"]["service_job_status"]
+          technician_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          service_notes?: string | null
+          service_request_id: string
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["service_job_status"]
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          service_notes?: string | null
+          service_request_id?: string
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["service_job_status"]
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_jobs_service_request_id_fkey"
+            columns: ["service_request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_requests: {
+        Row: {
+          assigned_technician: string | null
+          created_at: string
+          customer_id: string
+          description: string | null
+          id: string
+          location: string | null
+          priority: string
+          service_type: string
+          status: Database["public"]["Enums"]["service_request_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_technician?: string | null
+          created_at?: string
+          customer_id: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          priority?: string
+          service_type: string
+          status?: Database["public"]["Enums"]["service_request_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_technician?: string | null
+          created_at?: string
+          customer_id?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          priority?: string
+          service_type?: string
+          status?: Database["public"]["Enums"]["service_request_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "technician" | "accounts"
+      invoice_status: "Draft" | "Pending" | "Paid" | "Overdue" | "Cancelled"
+      payment_method: "Cash" | "Bank Transfer" | "Credit Card" | "Cheque"
+      service_job_status:
+        | "Scheduled"
+        | "In Progress"
+        | "Completed"
+        | "Cancelled"
+      service_request_status:
+        | "Pending"
+        | "Assigned"
+        | "In Progress"
+        | "Completed"
+        | "Invoiced"
+      transaction_type: "Stock In" | "Stock Out" | "Adjustment"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +664,24 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "technician", "accounts"],
+      invoice_status: ["Draft", "Pending", "Paid", "Overdue", "Cancelled"],
+      payment_method: ["Cash", "Bank Transfer", "Credit Card", "Cheque"],
+      service_job_status: [
+        "Scheduled",
+        "In Progress",
+        "Completed",
+        "Cancelled",
+      ],
+      service_request_status: [
+        "Pending",
+        "Assigned",
+        "In Progress",
+        "Completed",
+        "Invoiced",
+      ],
+      transaction_type: ["Stock In", "Stock Out", "Adjustment"],
+    },
   },
 } as const
