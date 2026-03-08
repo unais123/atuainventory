@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Plus, Mail, Phone } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AddSupplierDialog } from "@/components/AddSupplierDialog";
 
 export default function Suppliers() {
   const { data: suppliers = [], isLoading } = useQuery({
@@ -21,7 +21,7 @@ export default function Suppliers() {
           <h1 className="page-header">Suppliers</h1>
           <p className="text-sm text-muted-foreground">Manage hardware suppliers and purchase history.</p>
         </div>
-        <Button size="sm"><Plus className="h-4 w-4 mr-1" />Add Supplier</Button>
+        <AddSupplierDialog />
       </div>
 
       {isLoading ? (
