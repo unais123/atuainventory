@@ -85,6 +85,8 @@ export default function Inventory() {
           </TableBody>
         </Table>
       </div>
+
+      <EditInventoryDialog item={selected} open={!!selected} onOpenChange={(o) => !o && setSelected(null)} />
     </div>
   );
 }
