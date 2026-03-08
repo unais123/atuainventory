@@ -1,17 +1,22 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Download } from "lucide-react";
+import { Search, Download } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InvoiceDetailDialog } from "@/components/InvoiceDetailDialog";
 
 const fmt = (n: number) => `SAR ${n.toLocaleString("en", { minimumFractionDigits: 2 })}`;
 
 export default function Invoices() {
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["invoices"],
     queryFn: async () => {
@@ -33,7 +38,6 @@ export default function Invoices() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" />Export</Button>
-          <Button size="sm"><Plus className="h-4 w-4 mr-1" />New Invoice</Button>
         </div>
       </div>
 
@@ -71,7 +75,11 @@ export default function Invoices() {
               </TableRow>
             ) : (
               invoices.map((inv) => (
-                <TableRow key={inv.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow
+                  key={inv.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => { setSelectedInvoice(inv); setDetailOpen(true); }}
+                >
                   <TableCell className="font-mono text-xs">{inv.invoice_number}</TableCell>
                   <TableCell className="font-medium">{inv.customers?.company_name ?? "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{inv.date}</TableCell>
@@ -86,6 +94,12 @@ export default function Invoices() {
           </TableBody>
         </Table>
       </div>
+
+      <InvoiceDetailDialog
+        invoice={selectedInvoice}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
     </div>
   );
 }
