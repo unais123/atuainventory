@@ -148,8 +148,25 @@ th.right,td.right{text-align:right}tbody td{padding:12px;font-size:14px;border-b
             </div>
           )}
 
-          <div className="flex gap-6 text-sm">
+          <div className="flex items-center justify-between text-sm">
             <div><span className="text-muted-foreground">Date:</span> {invoice.date}</div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-xs">Status:</span>
+              <Select
+                value={invoice.status}
+                onValueChange={(v) => statusMutation.mutate(v)}
+                disabled={statusMutation.isPending}
+              >
+                <SelectTrigger className="h-8 w-32 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Constants.public.Enums.invoice_status.map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div>
