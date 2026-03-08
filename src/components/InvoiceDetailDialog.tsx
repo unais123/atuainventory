@@ -161,7 +161,7 @@ th.right,td.right{text-align:right}tbody td{padding:12px;font-size:14px;border-b
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground text-xs">Status:</span>
               <Select
-                value={invoice.status}
+                value={currentStatus}
                 onValueChange={(v) => statusMutation.mutate(v)}
                 disabled={statusMutation.isPending}
               >
