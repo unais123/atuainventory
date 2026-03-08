@@ -20,6 +20,8 @@ const priorityStyles: Record<string, string> = {
 };
 
 export default function ServiceRequests() {
+  const [selected, setSelected] = useState<any>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["service_requests"],
     queryFn: async () => {
