@@ -10,6 +10,7 @@ import { CustomerDetailDialog } from "@/components/CustomerDetailDialog";
 export default function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ["customers"],
@@ -18,6 +19,12 @@ export default function Customers() {
       if (error) throw error;
       return data;
     },
+  });
+
+  const filtered = customers.filter((c) => {
+    const q = search.toLowerCase();
+    return !q || [c.company_name, c.contact_person, c.email, c.phone, c.vat_number]
+      .some((v) => v?.toLowerCase().includes(q));
   });
 
   return (
@@ -32,7 +39,7 @@ export default function Customers() {
 
       <div className="relative max-w-sm">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search customers..." className="pl-9 h-9" />
+        <Input placeholder="Search customers..." className="pl-9 h-9" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
       {isLoading ? (
@@ -41,11 +48,11 @@ export default function Customers() {
             <Skeleton key={i} className="h-40 rounded-xl" />
           ))}
         </div>
-      ) : customers.length === 0 ? (
-        <p className="text-muted-foreground text-sm text-center py-12">No customers yet.</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-muted-foreground text-sm text-center py-12">{search ? "No matching customers." : "No customers yet."}</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {customers.map((c) => (
+          {filtered.map((c) => (
             <div
               key={c.id}
               className="rounded-xl border bg-card p-5 hover:shadow-md transition-shadow cursor-pointer"
