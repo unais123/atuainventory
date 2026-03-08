@@ -109,6 +109,7 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
     mutationFn: async () => {
       const { error } = await supabase.from("service_jobs").update({
         status: form.status as any,
+        service_request_id: form.service_request_id,
         start_time: form.start_time || null,
         end_time: form.end_time || null,
         service_notes: form.service_notes || null,
