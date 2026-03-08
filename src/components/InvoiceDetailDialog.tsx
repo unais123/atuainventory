@@ -91,6 +91,16 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
     enabled: !!invoice && open,
   });
 
+  const { data: companySettings } = useQuery({
+    queryKey: ["company_settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("company_settings").select("*").limit(1).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   if (!invoice) return null;
 
   const numberToWords = (num: number): string => {
