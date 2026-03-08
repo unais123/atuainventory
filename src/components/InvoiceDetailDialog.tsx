@@ -93,39 +93,169 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
 
   if (!invoice) return null;
 
+  const numberToWords = (num: number): string => {
+    const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+    const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+    if (num === 0) return 'Zero';
+    const convert = (n: number): string => {
+      if (n < 20) return ones[n];
+      if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+      if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convert(n % 100) : '');
+      if (n < 1000000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convert(n % 1000) : '');
+      return convert(Math.floor(n / 1000000)) + ' Million' + (n % 1000000 ? ' ' + convert(n % 1000000) : '');
+    };
+    const intPart = Math.floor(num);
+    const decPart = Math.round((num - intPart) * 100);
+    let result = convert(intPart) + ' Saudi Riyals';
+    if (decPart > 0) result += ' and ' + convert(decPart) + ' Halalas';
+    return result + ' Only';
+  };
+
   const handleDownload = () => {
-    const statusClass = invoice.status === "Paid" ? "paid" : invoice.status === "Overdue" ? "overdue" : "";
-    const itemsHtml = items.map((item, idx) => `
-      <tr><td>${idx + 1}</td><td>${item.description}</td><td class="right">${item.quantity}</td><td class="right">${fmt(Number(item.unit_price))}</td><td class="right">${fmt(Number(item.total))}</td></tr>
-    `).join("");
+    const subtotal = Number(invoice.hardware_total) + Number(invoice.labor_charges) + Number(invoice.service_charges);
+    const vatAmount = Number(invoice.vat);
+    const total = Number(invoice.total);
 
-    const laborRow = Number(invoice.labor_charges) > 0 ? `<div class="totals-row"><span class="label">Labor</span><span>${fmt(Number(invoice.labor_charges))}</span></div>` : "";
-    const serviceRow = Number(invoice.service_charges) > 0 ? `<div class="totals-row"><span class="label">Service</span><span>${fmt(Number(invoice.service_charges))}</span></div>` : "";
+    const itemsHtml = items.map((item, idx) => {
+      const lineTotal = Number(item.total);
+      const lineVat = lineTotal * 0.15;
+      return `<tr>
+        <td>${idx + 1}</td>
+        <td style="text-align:left">${item.description}</td>
+        <td>Unit</td>
+        <td>${item.quantity}</td>
+        <td>${Number(item.unit_price).toFixed(2)}</td>
+        <td>${lineTotal.toFixed(2)}</td>
+        <td>${lineVat.toFixed(2)}</td>
+        <td>${(lineTotal + lineVat).toFixed(2)}</td>
+      </tr>`;
+    }).join("");
 
-    const html = `<!DOCTYPE html><html><head><title>Invoice ${invoice.invoice_number}</title>
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ${invoice.invoice_number}</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',system-ui,sans-serif;color:#1a1a1a;padding:40px;max-width:800px;margin:0 auto}
-.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #e5e7eb}
-.title{font-size:28px;font-weight:700}.inv-num{font-size:14px;color:#6b7280;margin-top:4px;font-family:monospace}
-.status{display:inline-block;padding:4px 12px;border-radius:9999px;font-size:12px;font-weight:600;background:#dbeafe;color:#1d4ed8}
-.status.paid{background:#dcfce7;color:#16a34a}.status.overdue{background:#fee2e2;color:#dc2626}
-.section{margin-bottom:24px}.section-title{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;font-weight:600;margin-bottom:8px}
-.cust-info{font-size:14px;line-height:1.6}.cust-name{font-weight:600;font-size:15px}
-.meta{display:flex;gap:48px;margin-bottom:24px}.meta label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;font-weight:600}.meta span{display:block;font-size:14px;margin-top:2px}
-table{width:100%;border-collapse:collapse;margin-bottom:24px}thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;font-weight:600;padding:10px 12px;border-bottom:2px solid #e5e7eb}
-th.right,td.right{text-align:right}tbody td{padding:12px;font-size:14px;border-bottom:1px solid #f3f4f6}
-.totals{margin-left:auto;width:280px}.totals-row{display:flex;justify-content:space-between;padding:6px 0;font-size:14px}.totals-row .label{color:#6b7280}
-.totals-row.total{font-weight:700;font-size:16px;padding-top:10px;margin-top:6px;border-top:2px solid #111}
-.footer{margin-top:48px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;font-size:12px;color:#9ca3af}
-@media print{body{padding:20px}}
+@page{size:A4 portrait;margin:15mm 10mm}
+body{font-family:Arial,sans-serif;margin:0;padding:0}
+.page{width:210mm;min-height:297mm;margin:auto;padding:10mm 5mm 30mm;position:relative;background:#fff;box-sizing:border-box}
+.invoice-header{width:100%;display:flex;align-items:center;padding-bottom:5px}
+.invoice-header .left{font-size:12px;color:#b30000;font-weight:bold}
+.invoice-header .right{font-size:15px;color:#2a7cc7;font-weight:bold;text-align:center;margin-left:2%}
+.section{margin-bottom:20px}
+.client-header{font-weight:bold;font-size:13px;color:#0074cc;margin-bottom:8px}
+.full-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:10px}
+.full-table th,.full-table td{border:1px solid #fff;padding:8px 6px;text-align:left;vertical-align:top}
+.full-table .rtl{text-align:right;font-weight:bold}
+.full-table .rtl-text{text-align:right}
+table th,table td{padding:6px 10px;text-align:left;border:1px solid #000}
+table th{background:#fff}
+.bold{font-weight:bold}
+.meta-table{width:100%;border-collapse:collapse;font-size:11px}
+.meta-table th,.meta-table td{border:1px solid #000;padding:6px 8px;text-align:center}
+.meta-table th{font-weight:bold}
+.item-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:20px}
+.item-table th,.item-table td{border:1px solid #000;padding:8px 6px;text-align:center}
+.amount-summary{display:flex;justify-content:flex-end;font-size:11px}
+.totals-box table{border-collapse:collapse;width:350px;font-size:11px}
+.totals-box th,.totals-box td{border:1px solid #000;padding:8px;text-align:left}
+.totals-box .right{text-align:right}
+.amount-in-words{margin-top:5px;border:1px solid #000;padding:10px;font-size:10.5px}
+.signature-table{width:100%;border-collapse:collapse;border:1px solid #000;margin-top:10px;font-size:11.5px}
+.signature-table th,.signature-table td{border:1px solid #000;padding:8px;vertical-align:top;text-align:left}
+.signature-table .label{font-weight:bold}
+.qr-cell{text-align:center;vertical-align:middle;width:150px}
+@media print{.page{page-break-after:always}body{padding:0}}
 </style></head><body>
-<div class="header"><div><div class="title">INVOICE</div><div class="inv-num">${invoice.invoice_number}</div></div><div class="status ${statusClass}">${invoice.status}</div></div>
-<div class="meta"><div><label>Date</label><span>${invoice.date}</span></div></div>
-<div class="section"><div class="section-title">Bill To</div><div class="cust-info"><div class="cust-name">${customer?.company_name ?? ""}</div>${customer?.contact_person ? `<div>${customer.contact_person}</div>` : ""}${customer?.email ? `<div>${customer.email}</div>` : ""}${customer?.phone ? `<div>${customer.phone}</div>` : ""}${customer?.address ? `<div>${customer.address}</div>` : ""}${customer?.vat_number ? `<div>VAT: ${customer.vat_number}</div>` : ""}</div></div>
-<table><thead><tr><th>#</th><th>Description</th><th class="right">Qty</th><th class="right">Unit Price</th><th class="right">Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
-<div class="totals"><div class="totals-row"><span class="label">Hardware</span><span>${fmt(Number(invoice.hardware_total))}</span></div>${laborRow}${serviceRow}<div class="totals-row"><span class="label">VAT (15%)</span><span>${fmt(Number(invoice.vat))}</span></div><div class="totals-row total"><span>Total</span><span>${fmt(Number(invoice.total))}</span></div></div>
-<div class="footer">Thank you for your business</div>
-<script>window.onload=function(){window.print()}</script></body></html>`;
+<div class="page"><main>
+<div class="invoice-header">
+  <div class="left">Invoice No / رقم الفاتورة : <span style="color:#b30000">${invoice.invoice_number}</span></div>
+  <div class="right">TAX INVOICE / فاتورة ضريبية</div>
+</div>
+
+<div style="margin-top:2%" class="section">
+  <div class="client-header">Client Details / <span>تفاصيل العميل</span></div>
+  <table class="full-table">
+    <tr><th>Name</th><td colspan="3" class="bold">${customer?.company_name ?? ""}</td><td colspan="3" class="bold rtl-text"></td><th class="rtl">الاسم</th></tr>
+    <tr><th>Contact</th><td colspan="3">${customer?.contact_person ?? ""}</td><td colspan="3" class="rtl-text"></td><th class="rtl">جهة الاتصال</th></tr>
+    <tr><th>Address</th><td colspan="3">${customer?.address ?? ""}</td><td colspan="3" class="rtl-text"></td><th class="rtl">العنوان</th></tr>
+    <tr><th>Phone</th><td>${customer?.phone ?? ""}</td><th>Email</th><td>${customer?.email ?? ""}</td><td class="rtl-text"></td><th class="rtl">البريد</th><td class="rtl-text"></td><th class="rtl">الهاتف</th></tr>
+    <tr><th>VAT No</th><td colspan="3">${customer?.vat_number ?? ""}</td><td colspan="3" class="rtl-text"></td><th class="rtl">الرقم الضريبي</th></tr>
+  </table>
+</div>
+
+<div class="section">
+  <table class="meta-table">
+    <tr>
+      <th>Invoice Date<br><span>تاريخ الفاتورة</span></th>
+      <th>Status<br><span>الحالة</span></th>
+      <th>Payment Type<br><span>نوع الدفع</span></th>
+    </tr>
+    <tr>
+      <td>${invoice.date}</td>
+      <td>${invoice.status}</td>
+      <td>—</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <table class="item-table">
+    <thead><tr>
+      <th>SL.</th>
+      <th>Description<br><span>البيان</span></th>
+      <th>Unit<br><span>وحدة</span></th>
+      <th>Qty<br><span>الكمية</span></th>
+      <th>Unit Price<br><span>سعر الوحدة</span></th>
+      <th>Amount Excl VAT (SAR)<br><span>المبلغ باستثناء الضريبة</span></th>
+      <th>VAT (SAR)<br><span>الضريبة</span></th>
+      <th>Amount Incl VAT (SAR)<br><span>الإجمالي شامل الضريبة</span></th>
+    </tr></thead>
+    <tbody>${itemsHtml}</tbody>
+  </table>
+</div>
+
+<div class="section amount-summary">
+  <div class="totals-box"><table>
+    <tr><th style="border-right:0">Total Amount Excl VAT (SAR)<br><span>المجموع باستثناء الضريبة</span></th><td class="right" style="border-left:0">SAR ${subtotal.toFixed(2)}</td></tr>
+    <tr><th style="border-right:0">VAT Amount (SAR)<br><span>قيمة الضريبة</span></th><td class="right" style="border-left:0">SAR ${vatAmount.toFixed(2)}</td></tr>
+    <tr><th style="border-right:0">Total Amount Incl. VAT (SAR)<br><span>الإجمالي شامل الضريبة</span></th><td class="right bold" style="border-left:0">SAR ${total.toFixed(2)}</td></tr>
+    <tr><th style="border-right:0">Balance Due<br><span>قيمة الفاتورة</span></th><td class="right bold" style="border-left:0">SAR ${total.toFixed(2)}</td></tr>
+  </table></div>
+</div>
+
+<div class="section">
+  <div class="amount-in-words"><strong>Amount In Words :</strong> ${numberToWords(total)}</div>
+</div>
+
+<table class="signature-table" style="page-break-before:always">
+  <tr>
+    <th colspan="2">Bank Details / التفاصيل المصرفية</th>
+    <th>Prepared By<br><span>أعدت بواسطة</span></th>
+    <th>Received By<br><span>استلمت من قبل</span></th>
+  </tr>
+  <tr>
+    <td class="label">Account Name<br><span>إسم الحساب</span></td>
+    <td>GRAY LANE TRADING COMPANY<br><span>شركة الممر الرمادي التجارية</span></td>
+    <td style="text-align:center;border-bottom:0" rowspan="3"></td>
+    <td style="text-align:center;border-bottom:0" rowspan="3"></td>
+  </tr>
+  <tr>
+    <td class="label">Bank Name<br><span>اسم البنك</span></td>
+    <td>SAUDI BRITISH BANK</td>
+  </tr>
+  <tr>
+    <td class="label">Account No<br><span>رقم حساب</span></td>
+    <td>262-353493-001</td>
+  </tr>
+  <tr>
+    <td class="label">IBAN No<br><span>رقم البنك الدولي</span></td>
+    <td>SA70 4500 0000 2623 5349 3001</td>
+    <td style="text-align:center;border-top:0">Signature with Stamp</td>
+    <td style="text-align:center;border-top:0">Signature with Stamp</td>
+  </tr>
+</table>
+
+</main></div>
+<script>window.onload=function(){window.print()}</script>
+</body></html>`;
 
     const win = window.open("", "_blank", "width=800,height=900");
     if (!win) return;
