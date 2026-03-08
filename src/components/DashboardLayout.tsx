@@ -37,7 +37,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </header>
-          <main className="flex-1 p-6 overflow-auto">{children}</main>
+          <main className="flex-1 p-3 sm:p-6 overflow-auto">{children}</main>
         </div>
       </div>
     </SidebarProvider>
