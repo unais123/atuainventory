@@ -69,7 +69,7 @@ export default function Inventory() {
               </TableRow>
             ) : (
               items.map((item) => (
-                <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelected(item)}>
                   <TableCell className="font-medium">{item.item_name}</TableCell>
                   <TableCell className="text-muted-foreground">{item.category}</TableCell>
                   <TableCell>{item.brand}</TableCell>
