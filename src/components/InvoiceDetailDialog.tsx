@@ -122,9 +122,13 @@ export function InvoiceDetailDialog({ invoice, open, onOpenChange }: Props) {
   };
 
   const handleDownload = () => {
+    const cs = companySettings;
     const subtotal = Number(invoice.hardware_total) + Number(invoice.labor_charges) + Number(invoice.service_charges);
     const vatAmount = Number(invoice.vat);
     const total = Number(invoice.total);
+    const logoHtml = cs?.logo_url ? `<img src="${cs.logo_url}" style="max-height:60px;max-width:180px;object-fit:contain" />` : '';
+    const companyNameEn = cs?.company_name || '';
+    const companyNameAr = cs?.company_name_ar || '';
 
     const itemsHtml = items.map((item, idx) => {
       const lineTotal = Number(item.total);
