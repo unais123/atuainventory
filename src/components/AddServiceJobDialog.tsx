@@ -18,6 +18,7 @@ export function AddServiceJobDialog() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     service_request_id: "",
+    employee_id: "",
     start_time: "",
     end_time: "",
     service_notes: "",
@@ -38,11 +39,26 @@ export function AddServiceJobDialog() {
     enabled: open,
   });
 
+  const { data: employees = [] } = useQuery({
+    queryKey: ["employees_active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("employees")
+        .select("id, name, role")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: open,
+  });
+
   const mutation = useMutation({
     mutationFn: async () => {
       if (!form.service_request_id) throw new Error("Please select a service request");
       const { error } = await supabase.from("service_jobs").insert({
         service_request_id: form.service_request_id,
+        employee_id: form.employee_id || null,
         start_time: form.start_time || null,
         end_time: form.end_time || null,
         service_notes: form.service_notes || null,
@@ -52,7 +68,7 @@ export function AddServiceJobDialog() {
     onSuccess: () => {
       toast.success("Service job created");
       qc.invalidateQueries({ queryKey: ["service-jobs"] });
-      setForm({ service_request_id: "", start_time: "", end_time: "", service_notes: "" });
+      setForm({ service_request_id: "", employee_id: "", start_time: "", end_time: "", service_notes: "" });
       setOpen(false);
     },
     onError: (err: Error) => toast.error(err.message),
@@ -77,6 +93,19 @@ export function AddServiceJobDialog() {
                 {requests.map((r: any) => (
                   <SelectItem key={r.id} value={r.id}>
                     {r.customers?.company_name ?? "—"} — {r.service_type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Assigned Employee</Label>
+            <Select value={form.employee_id} onValueChange={(v) => setForm((f) => ({ ...f, employee_id: v }))}>
+              <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
+              <SelectContent>
+                {employees.map((emp: any) => (
+                  <SelectItem key={emp.id} value={emp.id}>
+                    {emp.name} {emp.role ? `(${emp.role})` : ''}
                   </SelectItem>
                 ))}
               </SelectContent>

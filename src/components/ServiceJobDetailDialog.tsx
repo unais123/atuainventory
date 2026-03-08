@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -27,6 +27,8 @@ interface ServiceJob {
   start_time: string | null;
   end_time: string | null;
   service_notes: string | null;
+  employee_id: string | null;
+  employees?: { name: string; role: string } | null;
   service_requests?: {
     service_type: string;
     customers?: { company_name: string } | null;
@@ -46,15 +48,28 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     status: "Scheduled",
+    employee_id: "",
     start_time: "",
     end_time: "",
     service_notes: "",
+  });
+
+  const { data: employees = [] } = useQuery({
+    queryKey: ["employees_active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("employees").select("id, name, role").eq("is_active", true).order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: editing,
   });
 
   useEffect(() => {
     if (job) {
       setForm({
         status: job.status,
+        employee_id: job.employee_id || "",
         start_time: job.start_time ? job.start_time.slice(0, 16) : "",
         end_time: job.end_time ? job.end_time.slice(0, 16) : "",
         service_notes: job.service_notes || "",
@@ -66,6 +81,7 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
     mutationFn: async () => {
       const { error } = await supabase.from("service_jobs").update({
         status: form.status as any,
+        employee_id: form.employee_id || null,
         start_time: form.start_time || null,
         end_time: form.end_time || null,
         service_notes: form.service_notes || null,
@@ -98,6 +114,7 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
 
   const customerName = job.service_requests?.customers?.company_name ?? "—";
   const serviceType = job.service_requests?.service_type ?? "—";
+  const employeeName = job.employees?.name ?? "—";
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) setEditing(false); onOpenChange(o); }}>
@@ -140,6 +157,19 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Assigned Employee</Label>
+              <Select value={form.employee_id} onValueChange={(v) => setForm({ ...form, employee_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
+                <SelectContent>
+                  {employees.map((emp: any) => (
+                    <SelectItem key={emp.id} value={emp.id}>
+                      {emp.name} {emp.role ? `(${emp.role})` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Start Date</Label>
@@ -168,6 +198,7 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
                 <span className="text-muted-foreground">Status:</span>
                 <StatusBadge status={job.status} />
               </div>
+              <div><span className="text-muted-foreground">Employee:</span> {employeeName}</div>
               <div><span className="text-muted-foreground">Start:</span> {job.start_time ? format(new Date(job.start_time), "dd MMM yyyy HH:mm") : "—"}</div>
               <div><span className="text-muted-foreground">End:</span> {job.end_time ? format(new Date(job.end_time), "dd MMM yyyy HH:mm") : "—"}</div>
             </div>
