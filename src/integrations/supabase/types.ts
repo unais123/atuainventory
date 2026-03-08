@@ -104,6 +104,39 @@ export type Database = {
         }
         Relationships: []
       }
+      employees: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
           brand: string | null
@@ -421,6 +454,7 @@ export type Database = {
       service_jobs: {
         Row: {
           created_at: string
+          employee_id: string | null
           end_time: string | null
           id: string
           service_notes: string | null
@@ -432,6 +466,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          employee_id?: string | null
           end_time?: string | null
           id?: string
           service_notes?: string | null
@@ -443,6 +478,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          employee_id?: string | null
           end_time?: string | null
           id?: string
           service_notes?: string | null
@@ -453,6 +489,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "service_jobs_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "service_jobs_service_request_id_fkey"
             columns: ["service_request_id"]
