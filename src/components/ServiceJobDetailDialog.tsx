@@ -29,6 +29,7 @@ interface ServiceJob {
   start_time: string | null;
   end_time: string | null;
   service_notes: string | null;
+  service_request_id: string;
   employee_id: string | null;
   service_job_employees?: { employee_id: string; employees: { name: string; role: string } }[];
   service_requests?: {
@@ -50,6 +51,7 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     status: "Scheduled",
+    service_request_id: "",
     employee_ids: [] as string[],
     start_time: "",
     end_time: "",
@@ -67,11 +69,25 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
     enabled: editing,
   });
 
+  const { data: requests = [] } = useQuery({
+    queryKey: ["service_requests_for_jobs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_requests")
+        .select("id, service_type, customers(company_name)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: editing,
+  });
+
   useEffect(() => {
     if (job) {
       const empIds = (job.service_job_employees || []).map((sje: any) => sje.employee_id);
       setForm({
         status: job.status,
+        service_request_id: job.service_request_id,
         employee_ids: empIds,
         start_time: job.start_time ? job.start_time.slice(0, 16) : "",
         end_time: job.end_time ? job.end_time.slice(0, 16) : "",
@@ -93,6 +109,7 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
     mutationFn: async () => {
       const { error } = await supabase.from("service_jobs").update({
         status: form.status as any,
+        service_request_id: form.service_request_id,
         start_time: form.start_time || null,
         end_time: form.end_time || null,
         service_notes: form.service_notes || null,
@@ -170,6 +187,19 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
 
         {editing ? (
           <form onSubmit={(e) => { e.preventDefault(); updateMutation.mutate(); }} className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Service Request (Customer) *</Label>
+              <Select value={form.service_request_id} onValueChange={(v) => setForm({ ...form, service_request_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Select request" /></SelectTrigger>
+                <SelectContent>
+                  {requests.map((r: any) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.customers?.company_name ?? "—"} — {r.service_type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label>Status</Label>
               <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
