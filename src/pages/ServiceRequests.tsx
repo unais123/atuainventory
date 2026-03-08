@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import { AddServiceRequestDialog } from "@/components/AddServiceRequestDialog";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -37,7 +38,7 @@ export default function ServiceRequests() {
           <h1 className="page-header">Service Requests</h1>
           <p className="text-sm text-muted-foreground">Track and manage all service requests.</p>
         </div>
-        <Button size="sm"><Plus className="h-4 w-4 mr-1" />New Request</Button>
+        <AddServiceRequestDialog />
       </div>
 
       <div className="relative max-w-sm">
