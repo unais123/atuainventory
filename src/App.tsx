@@ -10,6 +10,7 @@ import Customers from "@/pages/Customers";
 import ServiceRequests from "@/pages/ServiceRequests";
 import Invoices from "@/pages/Invoices";
 import Suppliers from "@/pages/Suppliers";
+import Reports from "@/pages/Reports";
 import PlaceholderPage from "@/pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 
@@ -30,7 +31,7 @@ const App = () => (
             <Route path="/service-jobs" element={<PlaceholderPage title="Service Jobs" />} />
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/payments" element={<PlaceholderPage title="Payments" />} />
-            <Route path="/reports" element={<PlaceholderPage title="Reports & Analytics" />} />
+            <Route path="/reports" element={<Reports />} />
             <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
             <Route path="*" element={<NotFound />} />
