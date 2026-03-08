@@ -51,6 +51,7 @@ export function AddInventoryDialog() {
         quantity: Number(form.quantity) || 0,
         min_stock: Number(form.min_stock) || 0,
         warehouse: form.warehouse || null,
+        supplier_id: form.supplier_id || null,
       });
       if (error) throw error;
     },
