@@ -40,12 +40,12 @@ function ProtectedRoutes() {
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/customers" element={<Customers />} />
         <Route path="/service-requests" element={<ServiceRequests />} />
-        <Route path="/service-jobs" element={<PlaceholderPage title="Service Jobs" />} />
+        <Route path="/service-jobs" element={<ServiceJobs />} />
         <Route path="/invoices" element={<Invoices />} />
-        <Route path="/payments" element={<PlaceholderPage title="Payments" />} />
+        <Route path="/payments" element={<Payments />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/suppliers" element={<Suppliers />} />
-        <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </DashboardLayout>
