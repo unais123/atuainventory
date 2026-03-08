@@ -30,6 +30,14 @@ export function AddInventoryDialog() {
   const [form, setForm] = useState(defaultForm);
   const qc = useQueryClient();
 
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("suppliers").select("id, name").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
   const mutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("inventory").insert({
