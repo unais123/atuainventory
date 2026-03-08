@@ -11,6 +11,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ServiceRequestDetailDialog } from "@/components/ServiceRequestDetailDialog";
+import { MobileCard } from "@/components/MobileCardView";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const priorityStyles: Record<string, string> = {
   Low: "bg-muted text-muted-foreground",
@@ -22,6 +24,8 @@ const priorityStyles: Record<string, string> = {
 export default function ServiceRequests() {
   const [selected, setSelected] = useState<any>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const isMobile = useIsMobile();
+
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["service_requests"],
     queryFn: async () => {
@@ -34,9 +38,11 @@ export default function ServiceRequests() {
     },
   });
 
+  const openDetail = (sr: any) => { setSelected(sr); setDetailOpen(true); };
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="page-header">Service Requests</h1>
           <p className="text-sm text-muted-foreground">Track and manage all service requests.</p>
@@ -49,33 +55,50 @@ export default function ServiceRequests() {
         <Input placeholder="Search requests..." className="pl-9 h-9" />
       </div>
 
-      <div className="rounded-xl border bg-card overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Customer</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <TableRow key={i}>
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : requests.length === 0 ? (
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        </div>
+      ) : requests.length === 0 ? (
+        <p className="text-muted-foreground text-sm text-center py-12">No service requests yet.</p>
+      ) : isMobile ? (
+        <div className="space-y-3">
+          {requests.map((sr) => (
+            <MobileCard
+              key={sr.id}
+              title={sr.customers?.company_name ?? "—"}
+              subtitle={sr.service_type}
+              status={sr.status}
+              onClick={() => openDetail(sr)}
+              fields={[
+                {
+                  label: "Priority",
+                  value: (
+                    <Badge variant="outline" className={priorityStyles[sr.priority] ?? ""}>
+                      {sr.priority}
+                    </Badge>
+                  ),
+                },
+                { label: "Location", value: sr.location || "—" },
+              ]}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border bg-card overflow-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">No service requests yet.</TableCell>
+                <TableHead>Customer</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Priority</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
-            ) : (
-              requests.map((sr) => (
-                <TableRow key={sr.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setSelected(sr); setDetailOpen(true); }}>
+            </TableHeader>
+            <TableBody>
+              {requests.map((sr) => (
+                <TableRow key={sr.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetail(sr)}>
                   <TableCell className="font-medium">{sr.customers?.company_name ?? "—"}</TableCell>
                   <TableCell>{sr.service_type}</TableCell>
                   <TableCell>
@@ -84,11 +107,11 @@ export default function ServiceRequests() {
                   <TableCell className="text-muted-foreground text-xs">{sr.location}</TableCell>
                   <TableCell><StatusBadge status={sr.status} /></TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <ServiceRequestDetailDialog request={selected} open={detailOpen} onOpenChange={setDetailOpen} />
     </div>

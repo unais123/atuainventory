@@ -10,12 +10,15 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InvoiceDetailDialog } from "@/components/InvoiceDetailDialog";
+import { MobileCard } from "@/components/MobileCardView";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const fmt = (n: number) => `SAR ${n.toLocaleString("en", { minimumFractionDigits: 2 })}`;
 
 export default function Invoices() {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["invoices"],
@@ -29,9 +32,11 @@ export default function Invoices() {
     },
   });
 
+  const openDetail = (inv: any) => { setSelectedInvoice(inv); setDetailOpen(true); };
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="page-header">Invoices</h1>
           <p className="text-sm text-muted-foreground">Generate and manage service invoices.</p>
@@ -46,40 +51,48 @@ export default function Invoices() {
         <Input placeholder="Search invoices..." className="pl-9 h-9" />
       </div>
 
-      <div className="rounded-xl border bg-card overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Invoice #</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="text-right">Hardware</TableHead>
-              <TableHead className="text-right">Service</TableHead>
-              <TableHead className="text-right">VAT</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <TableRow key={i}>
-                  {Array.from({ length: 8 }).map((_, j) => (
-                    <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : invoices.length === 0 ? (
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        </div>
+      ) : invoices.length === 0 ? (
+        <p className="text-muted-foreground text-sm text-center py-12">No invoices yet.</p>
+      ) : isMobile ? (
+        <div className="space-y-3">
+          {invoices.map((inv) => (
+            <MobileCard
+              key={inv.id}
+              title={inv.customers?.company_name ?? "—"}
+              subtitle={`#${inv.invoice_number} · ${inv.date}`}
+              status={inv.status}
+              onClick={() => openDetail(inv)}
+              fields={[
+                { label: "Hardware", value: fmt(Number(inv.hardware_total)) },
+                { label: "Service", value: fmt(Number(inv.service_charges)) },
+                { label: "VAT", value: fmt(Number(inv.vat)) },
+                { label: "Total", value: <span className="font-semibold">{fmt(Number(inv.total))}</span> },
+              ]}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border bg-card overflow-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">No invoices yet.</TableCell>
+                <TableHead>Invoice #</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Hardware</TableHead>
+                <TableHead className="text-right">Service</TableHead>
+                <TableHead className="text-right">VAT</TableHead>
+                <TableHead className="text-right">Total</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
-            ) : (
-              invoices.map((inv) => (
-                <TableRow
-                  key={inv.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => { setSelectedInvoice(inv); setDetailOpen(true); }}
-                >
+            </TableHeader>
+            <TableBody>
+              {invoices.map((inv) => (
+                <TableRow key={inv.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetail(inv)}>
                   <TableCell className="font-mono text-xs">{inv.invoice_number}</TableCell>
                   <TableCell className="font-medium">{inv.customers?.company_name ?? "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{inv.date}</TableCell>
@@ -89,17 +102,13 @@ export default function Invoices() {
                   <TableCell className="text-right font-semibold">{fmt(Number(inv.total))}</TableCell>
                   <TableCell><StatusBadge status={inv.status} /></TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
-      <InvoiceDetailDialog
-        invoice={selectedInvoice}
-        open={detailOpen}
-        onOpenChange={setDetailOpen}
-      />
+      <InvoiceDetailDialog invoice={selectedInvoice} open={detailOpen} onOpenChange={setDetailOpen} />
     </div>
   );
 }
