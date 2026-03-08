@@ -1,4 +1,5 @@
-import { serviceRequests } from "@/lib/mock-data";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search } from "lucide-react";
@@ -7,6 +8,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const priorityStyles: Record<string, string> = {
   Low: "bg-muted text-muted-foreground",
@@ -16,6 +18,18 @@ const priorityStyles: Record<string, string> = {
 };
 
 export default function ServiceRequests() {
+  const { data: requests = [], isLoading } = useQuery({
+    queryKey: ["service_requests"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_requests")
+        .select("*, customers(company_name)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -35,29 +49,39 @@ export default function ServiceRequests() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Priority</TableHead>
-              <TableHead>Technician</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {serviceRequests.map((sr) => (
-              <TableRow key={sr.id} className="cursor-pointer hover:bg-muted/50">
-                <TableCell className="font-mono text-xs">{sr.id}</TableCell>
-                <TableCell className="font-medium">{sr.customer}</TableCell>
-                <TableCell>{sr.type}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={priorityStyles[sr.priority]}>{sr.priority}</Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground">{sr.technician}</TableCell>
-                <TableCell className="text-muted-foreground text-xs">{sr.location}</TableCell>
-                <TableCell><StatusBadge status={sr.status} /></TableCell>
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <TableRow key={i}>
+                  {Array.from({ length: 5 }).map((_, j) => (
+                    <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : requests.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">No service requests yet.</TableCell>
               </TableRow>
-            ))}
+            ) : (
+              requests.map((sr) => (
+                <TableRow key={sr.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell className="font-medium">{sr.customers?.company_name ?? "—"}</TableCell>
+                  <TableCell>{sr.service_type}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={priorityStyles[sr.priority] ?? ""}>{sr.priority}</Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs">{sr.location}</TableCell>
+                  <TableCell><StatusBadge status={sr.status} /></TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

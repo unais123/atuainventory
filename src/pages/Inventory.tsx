@@ -1,4 +1,5 @@
-import { inventoryItems } from "@/lib/mock-data";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Download } from "lucide-react";
@@ -6,8 +7,18 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Inventory() {
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["inventory"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("inventory").select("*").order("item_name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -30,7 +41,6 @@ export default function Inventory() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Brand</TableHead>
@@ -41,20 +51,33 @@ export default function Inventory() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {inventoryItems.map((item) => (
-              <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50">
-                <TableCell className="font-mono text-xs">{item.id}</TableCell>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell className="text-muted-foreground">{item.category}</TableCell>
-                <TableCell>{item.brand}</TableCell>
-                <TableCell className="text-right">SAR {item.purchasePrice.toLocaleString()}</TableCell>
-                <TableCell className="text-right">SAR {item.sellingPrice.toLocaleString()}</TableCell>
-                <TableCell className={cn("text-right font-semibold", item.quantity <= item.minStock && "text-destructive")}>
-                  {item.quantity}
-                </TableCell>
-                <TableCell className="text-muted-foreground">{item.warehouse}</TableCell>
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <TableRow key={i}>
+                  {Array.from({ length: 7 }).map((_, j) => (
+                    <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : items.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">No inventory items yet.</TableCell>
               </TableRow>
-            ))}
+            ) : (
+              items.map((item) => (
+                <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell className="font-medium">{item.item_name}</TableCell>
+                  <TableCell className="text-muted-foreground">{item.category}</TableCell>
+                  <TableCell>{item.brand}</TableCell>
+                  <TableCell className="text-right">SAR {Number(item.purchase_price).toLocaleString()}</TableCell>
+                  <TableCell className="text-right">SAR {Number(item.selling_price).toLocaleString()}</TableCell>
+                  <TableCell className={cn("text-right font-semibold", item.quantity <= item.min_stock && "text-destructive")}>
+                    {item.quantity}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{item.warehouse}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
