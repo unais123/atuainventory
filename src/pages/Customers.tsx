@@ -10,6 +10,7 @@ import { CustomerDetailDialog } from "@/components/CustomerDetailDialog";
 export default function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ["customers"],
@@ -18,6 +19,12 @@ export default function Customers() {
       if (error) throw error;
       return data;
     },
+  });
+
+  const filtered = customers.filter((c) => {
+    const q = search.toLowerCase();
+    return !q || [c.company_name, c.contact_person, c.email, c.phone, c.vat_number]
+      .some((v) => v?.toLowerCase().includes(q));
   });
 
   return (
@@ -32,7 +39,7 @@ export default function Customers() {
 
       <div className="relative max-w-sm">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search customers..." className="pl-9 h-9" />
+        <Input placeholder="Search customers..." className="pl-9 h-9" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
       {isLoading ? (
