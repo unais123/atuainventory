@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Download } from "lucide-react";
 import { AddInventoryDialog } from "@/components/AddInventoryDialog";
+import { EditInventoryDialog } from "@/components/EditInventoryDialog";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -11,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Inventory() {
+  const [selected, setSelected] = useState<any>(null);
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["inventory"],
     queryFn: async () => {
@@ -66,7 +69,7 @@ export default function Inventory() {
               </TableRow>
             ) : (
               items.map((item) => (
-                <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelected(item)}>
                   <TableCell className="font-medium">{item.item_name}</TableCell>
                   <TableCell className="text-muted-foreground">{item.category}</TableCell>
                   <TableCell>{item.brand}</TableCell>
@@ -82,6 +85,8 @@ export default function Inventory() {
           </TableBody>
         </Table>
       </div>
+
+      <EditInventoryDialog item={selected} open={!!selected} onOpenChange={(o) => !o && setSelected(null)} />
     </div>
   );
 }
