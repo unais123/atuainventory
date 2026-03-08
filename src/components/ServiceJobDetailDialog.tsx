@@ -188,6 +188,19 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
         {editing ? (
           <form onSubmit={(e) => { e.preventDefault(); updateMutation.mutate(); }} className="space-y-4 py-2">
             <div className="space-y-2">
+              <Label>Service Request (Customer) *</Label>
+              <Select value={form.service_request_id} onValueChange={(v) => setForm({ ...form, service_request_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Select request" /></SelectTrigger>
+                <SelectContent>
+                  {requests.map((r: any) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.customers?.company_name ?? "—"} — {r.service_type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label>Status</Label>
               <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
