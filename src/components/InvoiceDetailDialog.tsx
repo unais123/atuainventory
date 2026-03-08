@@ -181,9 +181,9 @@ table th{background:#fff}
 </style></head><body>
 <div class="page"><main>
 <div class="invoice-header">
-  <div class="left">Invoice No / رقم الفاتورة : <span style="color:#b30000">\${invoice.invoice_number}</span></div>
-  <div class="center">TAX INVOICE / فاتورة ضريبية<br><span style="font-size:11px">\${companyNameEn}${companyNameAr ? ` / ${companyNameAr}` : ''}</span></div>
-  <div class="logo">\${logoHtml}</div>
+  <div class="left">Invoice No / رقم الفاتورة : <span style="color:#b30000">${invoice.invoice_number}</span></div>
+  <div class="center">TAX INVOICE / فاتورة ضريبية<br><span style="font-size:11px">${companyNameEn}${companyNameAr ? ' / ' + companyNameAr : ''}</span></div>
+  <div class="logo">${logoHtml}</div>
 </div>
 
 <div style="margin-top:2%" class="section">
