@@ -87,6 +87,7 @@ export function ServiceJobDetailDialog({ job, open, onOpenChange }: Props) {
       const empIds = (job.service_job_employees || []).map((sje: any) => sje.employee_id);
       setForm({
         status: job.status,
+        service_request_id: job.service_request_id,
         employee_ids: empIds,
         start_time: job.start_time ? job.start_time.slice(0, 16) : "",
         end_time: job.end_time ? job.end_time.slice(0, 16) : "",
