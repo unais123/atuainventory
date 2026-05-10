@@ -17,27 +17,42 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setUnconfirmedEmail(null);
 
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) toast.error(error.message);
-      else navigate("/");
+      if (error) {
+        if (/confirm/i.test(error.message) || /not confirmed/i.test(error.message)) {
+          setUnconfirmedEmail(email);
+          toast.error("Please verify your email before signing in.");
+        } else {
+          toast.error(error.message);
+        }
+      } else navigate("/");
     } else if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: { full_name: fullName },
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: `${window.location.origin}/auth`,
         },
       });
       if (error) toast.error(error.message);
       else {
-        toast.success("Account created! Check your email to confirm, or sign in directly.");
-        setMode("login");
+        // If email confirmation is required, session will be null
+        if (!data.session) {
+          toast.success("Account created! Check your inbox to verify your email before signing in.");
+          setUnconfirmedEmail(email);
+          setMode("login");
+        } else {
+          navigate("/");
+        }
       }
     } else if (mode === "forgot") {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -47,6 +62,19 @@ export default function Auth() {
       else toast.success("If an account exists, a reset link has been sent to your email.");
     }
     setLoading(false);
+  };
+
+  const handleResendVerification = async () => {
+    if (!unconfirmedEmail) return;
+    setLoading(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: unconfirmedEmail,
+      options: { emailRedirectTo: `${window.location.origin}/auth` },
+    });
+    setLoading(false);
+    if (error) toast.error(error.message);
+    else toast.success("Verification email resent. Please check your inbox.");
   };
 
   const title =
