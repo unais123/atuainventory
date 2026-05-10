@@ -150,6 +150,24 @@ export default function Auth() {
           </Button>
         </form>
 
+        {unconfirmedEmail && mode === "login" && (
+          <div className="rounded-md border border-border bg-muted/40 p-3 text-center text-sm space-y-2">
+            <p className="text-muted-foreground">
+              <span className="font-medium text-foreground">{unconfirmedEmail}</span> is not verified yet.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleResendVerification}
+              disabled={loading}
+              className="w-full"
+            >
+              Resend verification email
+            </Button>
+          </div>
+        )}
+
         <p className="text-center text-sm text-muted-foreground">
           {mode === "forgot" ? (
             <>
