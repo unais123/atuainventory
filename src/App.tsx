@@ -13,6 +13,7 @@ import Invoices from "@/pages/Invoices";
 import Suppliers from "@/pages/Suppliers";
 import Reports from "@/pages/Reports";
 import Auth from "@/pages/Auth";
+import ResetPassword from "@/pages/ResetPassword";
 import ServiceJobs from "@/pages/ServiceJobs";
 import Payments from "@/pages/Payments";
 import Settings from "@/pages/Settings";
@@ -63,6 +64,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/*" element={<ProtectedRoutes />} />
           </Routes>
         </AuthProvider>
