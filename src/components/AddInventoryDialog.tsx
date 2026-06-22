@@ -172,6 +172,7 @@ export function AddInventoryDialog() {
           </Button>
         </form>
       </DialogContent>
+      <BarcodeScannerDialog open={scannerOpen} onOpenChange={setScannerOpen} onScan={(v) => set("barcode", v)} />
     </Dialog>
   );
 }
