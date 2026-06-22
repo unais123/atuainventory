@@ -3,9 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Download } from "lucide-react";
+import { Search, Download, ScanLine } from "lucide-react";
 import { AddInventoryDialog } from "@/components/AddInventoryDialog";
 import { EditInventoryDialog } from "@/components/EditInventoryDialog";
+import { BarcodeScannerDialog } from "@/components/BarcodeScannerDialog";
+import { toast } from "sonner";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -16,6 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Inventory() {
   const [selected, setSelected] = useState<any>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const { data: items = [], isLoading } = useQuery({
@@ -34,11 +37,28 @@ export default function Inventory() {
           <h1 className="page-header">Inventory</h1>
           <p className="text-sm text-muted-foreground">Manage hardware stock across all warehouses.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => setScannerOpen(true)}>
+            <ScanLine className="h-4 w-4 mr-1" />Scan/Type Barcode
+          </Button>
           <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" />Export</Button>
           <AddInventoryDialog />
         </div>
       </div>
+
+      <BarcodeScannerDialog
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onScan={(value) => {
+          const match = items.find((i: any) => i.barcode === value || i.serial_number === value);
+          if (match) {
+            setSelected(match);
+            toast.success(`Found: ${match.item_name}`);
+          } else {
+            toast.error(`No item found for barcode "${value}"`);
+          }
+        }}
+      />
 
       <div className="relative max-w-sm">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
