@@ -108,6 +108,28 @@ export function AddInventoryDialog() {
               <Input id="serial_number" value={form.serial_number} onChange={(e) => set("serial_number", e.target.value)} />
             </div>
           </div>
+          <div className="grid gap-2">
+            <Label htmlFor="barcode">Barcode</Label>
+            <div className="flex gap-2">
+              <Input
+                id="barcode"
+                value={form.barcode}
+                onChange={(e) => set("barcode", e.target.value)}
+                placeholder="Type, scan or generate"
+              />
+              <Button type="button" variant="outline" size="icon" onClick={() => setScannerOpen(true)} title="Scan barcode">
+                <ScanLine className="h-4 w-4" />
+              </Button>
+              <Button type="button" variant="outline" size="icon" onClick={() => set("barcode", generateBarcodeValue())} title="Generate barcode">
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+            {form.barcode && (
+              <div className="rounded-md border bg-background p-2 flex justify-center">
+                <BarcodeDisplay value={form.barcode} />
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="purchase_price">Purchase Price (SAR)</Label>
