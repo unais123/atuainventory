@@ -11,12 +11,17 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 
+import { Plus, ScanLine, RefreshCw } from "lucide-react";
+import { BarcodeDisplay, generateBarcodeValue } from "@/components/BarcodeDisplay";
+import { BarcodeScannerDialog } from "@/components/BarcodeScannerDialog";
+
 const defaultForm = {
   item_name: "",
   category: "",
   brand: "",
   model: "",
   serial_number: "",
+  barcode: "",
   purchase_price: "",
   selling_price: "",
   quantity: "",
@@ -27,6 +32,7 @@ const defaultForm = {
 
 export function AddInventoryDialog() {
   const [open, setOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [form, setForm] = useState(defaultForm);
   const qc = useQueryClient();
 
@@ -46,13 +52,14 @@ export function AddInventoryDialog() {
         brand: form.brand || null,
         model: form.model || null,
         serial_number: form.serial_number || null,
+        barcode: form.barcode || null,
         purchase_price: Number(form.purchase_price) || 0,
         selling_price: Number(form.selling_price) || 0,
         quantity: Number(form.quantity) || 0,
         min_stock: Number(form.min_stock) || 0,
         warehouse: form.warehouse || null,
         supplier_id: form.supplier_id || null,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
