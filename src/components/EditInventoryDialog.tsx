@@ -74,7 +74,7 @@ export function EditInventoryDialog({ item, open, onOpenChange }: EditInventoryD
         min_stock: Number(form.min_stock) || 0,
         warehouse: form.warehouse || null,
         supplier_id: form.supplier_id || null,
-      }).eq("id", item!.id);
+      } as any).eq("id", item!.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -132,6 +132,23 @@ export function EditInventoryDialog({ item, open, onOpenChange }: EditInventoryD
               <Label>Serial Number</Label>
               <Input value={form.serial_number} onChange={(e) => set("serial_number", e.target.value)} />
             </div>
+          </div>
+          <div className="grid gap-2">
+            <Label>Barcode</Label>
+            <div className="flex gap-2">
+              <Input value={form.barcode} onChange={(e) => set("barcode", e.target.value)} placeholder="Type, scan or generate" />
+              <Button type="button" variant="outline" size="icon" onClick={() => setScannerOpen(true)}>
+                <ScanLine className="h-4 w-4" />
+              </Button>
+              <Button type="button" variant="outline" size="icon" onClick={() => set("barcode", generateBarcodeValue())}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+            {form.barcode && (
+              <div className="rounded-md border bg-background p-2 flex justify-center">
+                <BarcodeDisplay value={form.barcode} />
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
@@ -194,6 +211,7 @@ export function EditInventoryDialog({ item, open, onOpenChange }: EditInventoryD
           </div>
         </form>
       </DialogContent>
+      <BarcodeScannerDialog open={scannerOpen} onOpenChange={setScannerOpen} onScan={(v) => set("barcode", v)} />
     </Dialog>
   );
 }
