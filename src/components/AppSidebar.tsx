@@ -10,6 +10,7 @@ import {
   Truck,
   Settings,
   UserCog,
+  Receipt,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -35,6 +36,7 @@ const mainItems = [
 ];
 
 const financeItems = [
+  { title: "Billing", url: "/billing", icon: Receipt },
   { title: "Invoices", url: "/invoices", icon: FileText },
   { title: "Payments", url: "/payments", icon: CreditCard },
 ];
