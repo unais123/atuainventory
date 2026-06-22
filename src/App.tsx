@@ -18,6 +18,7 @@ import ServiceJobs from "@/pages/ServiceJobs";
 import Payments from "@/pages/Payments";
 import Settings from "@/pages/Settings";
 import Employees from "@/pages/Employees";
+import Billing from "@/pages/Billing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ function ProtectedRoutes() {
         <Route path="/customers" element={<Customers />} />
         <Route path="/service-requests" element={<ServiceRequests />} />
         <Route path="/service-jobs" element={<ServiceJobs />} />
+        <Route path="/billing" element={<Billing />} />
         <Route path="/invoices" element={<Invoices />} />
         <Route path="/payments" element={<Payments />} />
         <Route path="/reports" element={<Reports />} />

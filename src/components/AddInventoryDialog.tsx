@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, ScanLine, RefreshCw } from "lucide-react";
+import { BarcodeDisplay, generateBarcodeValue } from "@/components/BarcodeDisplay";
+import { BarcodeScannerDialog } from "@/components/BarcodeScannerDialog";
 
 const defaultForm = {
   item_name: "",
@@ -17,6 +19,7 @@ const defaultForm = {
   brand: "",
   model: "",
   serial_number: "",
+  barcode: "",
   purchase_price: "",
   selling_price: "",
   quantity: "",
@@ -27,6 +30,7 @@ const defaultForm = {
 
 export function AddInventoryDialog() {
   const [open, setOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [form, setForm] = useState(defaultForm);
   const qc = useQueryClient();
 
@@ -46,13 +50,14 @@ export function AddInventoryDialog() {
         brand: form.brand || null,
         model: form.model || null,
         serial_number: form.serial_number || null,
+        barcode: form.barcode || null,
         purchase_price: Number(form.purchase_price) || 0,
         selling_price: Number(form.selling_price) || 0,
         quantity: Number(form.quantity) || 0,
         min_stock: Number(form.min_stock) || 0,
         warehouse: form.warehouse || null,
         supplier_id: form.supplier_id || null,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -103,6 +108,28 @@ export function AddInventoryDialog() {
               <Input id="serial_number" value={form.serial_number} onChange={(e) => set("serial_number", e.target.value)} />
             </div>
           </div>
+          <div className="grid gap-2">
+            <Label htmlFor="barcode">Barcode</Label>
+            <div className="flex gap-2">
+              <Input
+                id="barcode"
+                value={form.barcode}
+                onChange={(e) => set("barcode", e.target.value)}
+                placeholder="Type, scan or generate"
+              />
+              <Button type="button" variant="outline" size="icon" onClick={() => setScannerOpen(true)} title="Scan barcode">
+                <ScanLine className="h-4 w-4" />
+              </Button>
+              <Button type="button" variant="outline" size="icon" onClick={() => set("barcode", generateBarcodeValue())} title="Generate barcode">
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+            {form.barcode && (
+              <div className="rounded-md border bg-background p-2 flex justify-center">
+                <BarcodeDisplay value={form.barcode} />
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="purchase_price">Purchase Price (SAR)</Label>
@@ -145,6 +172,7 @@ export function AddInventoryDialog() {
           </Button>
         </form>
       </DialogContent>
+      <BarcodeScannerDialog open={scannerOpen} onOpenChange={setScannerOpen} onScan={(v) => set("barcode", v)} />
     </Dialog>
   );
 }

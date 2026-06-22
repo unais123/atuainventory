@@ -13,7 +13,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, ScanLine, RefreshCw } from "lucide-react";
+import { BarcodeDisplay, generateBarcodeValue } from "@/components/BarcodeDisplay";
+import { BarcodeScannerDialog } from "@/components/BarcodeScannerDialog";
 
 interface EditInventoryDialogProps {
   item: any | null;
@@ -23,8 +25,9 @@ interface EditInventoryDialogProps {
 
 export function EditInventoryDialog({ item, open, onOpenChange }: EditInventoryDialogProps) {
   const qc = useQueryClient();
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [form, setForm] = useState({
-    item_name: "", category: "", brand: "", model: "", serial_number: "",
+    item_name: "", category: "", brand: "", model: "", serial_number: "", barcode: "",
     purchase_price: "", selling_price: "", quantity: "", min_stock: "", warehouse: "", supplier_id: "",
   });
 
@@ -36,6 +39,7 @@ export function EditInventoryDialog({ item, open, onOpenChange }: EditInventoryD
         brand: item.brand || "",
         model: item.model || "",
         serial_number: item.serial_number || "",
+        barcode: item.barcode || "",
         purchase_price: String(item.purchase_price ?? ""),
         selling_price: String(item.selling_price ?? ""),
         quantity: String(item.quantity ?? ""),
@@ -63,13 +67,14 @@ export function EditInventoryDialog({ item, open, onOpenChange }: EditInventoryD
         brand: form.brand || null,
         model: form.model || null,
         serial_number: form.serial_number || null,
+        barcode: form.barcode || null,
         purchase_price: Number(form.purchase_price) || 0,
         selling_price: Number(form.selling_price) || 0,
         quantity: Number(form.quantity) || 0,
         min_stock: Number(form.min_stock) || 0,
         warehouse: form.warehouse || null,
         supplier_id: form.supplier_id || null,
-      }).eq("id", item!.id);
+      } as any).eq("id", item!.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -127,6 +132,23 @@ export function EditInventoryDialog({ item, open, onOpenChange }: EditInventoryD
               <Label>Serial Number</Label>
               <Input value={form.serial_number} onChange={(e) => set("serial_number", e.target.value)} />
             </div>
+          </div>
+          <div className="grid gap-2">
+            <Label>Barcode</Label>
+            <div className="flex gap-2">
+              <Input value={form.barcode} onChange={(e) => set("barcode", e.target.value)} placeholder="Type, scan or generate" />
+              <Button type="button" variant="outline" size="icon" onClick={() => setScannerOpen(true)}>
+                <ScanLine className="h-4 w-4" />
+              </Button>
+              <Button type="button" variant="outline" size="icon" onClick={() => set("barcode", generateBarcodeValue())}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+            {form.barcode && (
+              <div className="rounded-md border bg-background p-2 flex justify-center">
+                <BarcodeDisplay value={form.barcode} />
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
@@ -189,6 +211,7 @@ export function EditInventoryDialog({ item, open, onOpenChange }: EditInventoryD
           </div>
         </form>
       </DialogContent>
+      <BarcodeScannerDialog open={scannerOpen} onOpenChange={setScannerOpen} onScan={(v) => set("barcode", v)} />
     </Dialog>
   );
 }
