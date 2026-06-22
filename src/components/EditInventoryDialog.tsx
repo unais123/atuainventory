@@ -13,7 +13,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, ScanLine, RefreshCw } from "lucide-react";
+import { BarcodeDisplay, generateBarcodeValue } from "@/components/BarcodeDisplay";
+import { BarcodeScannerDialog } from "@/components/BarcodeScannerDialog";
 
 interface EditInventoryDialogProps {
   item: any | null;
@@ -23,8 +25,9 @@ interface EditInventoryDialogProps {
 
 export function EditInventoryDialog({ item, open, onOpenChange }: EditInventoryDialogProps) {
   const qc = useQueryClient();
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [form, setForm] = useState({
-    item_name: "", category: "", brand: "", model: "", serial_number: "",
+    item_name: "", category: "", brand: "", model: "", serial_number: "", barcode: "",
     purchase_price: "", selling_price: "", quantity: "", min_stock: "", warehouse: "", supplier_id: "",
   });
 
@@ -36,6 +39,7 @@ export function EditInventoryDialog({ item, open, onOpenChange }: EditInventoryD
         brand: item.brand || "",
         model: item.model || "",
         serial_number: item.serial_number || "",
+        barcode: item.barcode || "",
         purchase_price: String(item.purchase_price ?? ""),
         selling_price: String(item.selling_price ?? ""),
         quantity: String(item.quantity ?? ""),
@@ -63,6 +67,7 @@ export function EditInventoryDialog({ item, open, onOpenChange }: EditInventoryD
         brand: form.brand || null,
         model: form.model || null,
         serial_number: form.serial_number || null,
+        barcode: form.barcode || null,
         purchase_price: Number(form.purchase_price) || 0,
         selling_price: Number(form.selling_price) || 0,
         quantity: Number(form.quantity) || 0,
