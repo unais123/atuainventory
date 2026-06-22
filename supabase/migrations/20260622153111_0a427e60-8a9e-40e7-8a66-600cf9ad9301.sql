@@ -1,0 +1,1 @@
+ALTER TABLE public.inventory ADD COLUMN IF NOT EXISTS barcode TEXT; CREATE INDEX IF NOT EXISTS inventory_barcode_idx ON public.inventory(barcode);

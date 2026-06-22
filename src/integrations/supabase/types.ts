@@ -139,6 +139,7 @@ export type Database = {
       }
       inventory: {
         Row: {
+          barcode: string | null
           brand: string | null
           category: string | null
           created_at: string
@@ -155,6 +156,7 @@ export type Database = {
           warehouse: string | null
         }
         Insert: {
+          barcode?: string | null
           brand?: string | null
           category?: string | null
           created_at?: string
@@ -171,6 +173,7 @@ export type Database = {
           warehouse?: string | null
         }
         Update: {
+          barcode?: string | null
           brand?: string | null
           category?: string | null
           created_at?: string
