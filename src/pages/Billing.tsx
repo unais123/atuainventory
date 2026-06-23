@@ -651,7 +651,7 @@ export default function Billing() {
                     <Input placeholder="123" value={cardForm.cvc} onChange={(e) => setCardForm({ ...cardForm, cvc: e.target.value })} />
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">Demo only — no real card is charged.</p>
+                
               </div>
             )}
 
@@ -665,7 +665,7 @@ export default function Billing() {
                   <Label>Transfer Reference</Label>
                   <Input value={bankForm.reference} onChange={(e) => setBankForm({ ...bankForm, reference: e.target.value })} />
                 </div>
-                <p className="text-xs text-muted-foreground">Demo only — no real transfer is initiated.</p>
+                
               </div>
             )}
 
