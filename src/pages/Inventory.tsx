@@ -7,6 +7,7 @@ import { Search, Download, ScanLine } from "lucide-react";
 import { AddInventoryDialog } from "@/components/AddInventoryDialog";
 import { EditInventoryDialog } from "@/components/EditInventoryDialog";
 import { BarcodeScannerDialog } from "@/components/BarcodeScannerDialog";
+import { downloadBarcodeLabel } from "@/lib/barcode-label";
 import { toast } from "sonner";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
