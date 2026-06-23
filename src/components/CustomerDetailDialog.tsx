@@ -43,9 +43,11 @@ const fmt = (n: number) => `SAR ${n.toLocaleString("en", { minimumFractionDigits
 
 export function CustomerDetailDialog({ customer, open, onOpenChange }: Props) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [orderOpen, setOrderOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ company_name: "", contact_person: "", email: "", phone: "", address: "", vat_number: "" });
+
 
   useEffect(() => {
     if (customer) {
