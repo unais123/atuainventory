@@ -12,9 +12,10 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Receipt, ArrowRight, ArrowLeft, Plus, Trash2, CreditCard, Building2, CheckCircle2, FileText,
+  Receipt, ArrowRight, ArrowLeft, Plus, Trash2, CreditCard, Building2, CheckCircle2, FileText, ScanLine, Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BarcodeScannerDialog } from "@/components/BarcodeScannerDialog";
 
 type Step = "customer" | "order" | "invoice" | "payment" | "done";
 type CustomerMode = "existing" | "new";
