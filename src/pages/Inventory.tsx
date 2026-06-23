@@ -105,6 +105,7 @@ export default function Inventory() {
                 <TableHead className="text-right">Selling</TableHead>
                 <TableHead className="text-right">Qty</TableHead>
                 <TableHead>Warehouse</TableHead>
+                <TableHead className="text-right">Barcode</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -119,6 +120,22 @@ export default function Inventory() {
                     {item.quantity}
                   </TableCell>
                   <TableCell className="text-muted-foreground">{item.warehouse}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        try {
+                          downloadBarcodeLabel(item);
+                        } catch (err: any) {
+                          toast.error(err.message);
+                        }
+                      }}
+                    >
+                      <Download className="h-4 w-4 mr-1" />Barcode
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
