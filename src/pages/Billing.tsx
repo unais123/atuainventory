@@ -37,10 +37,25 @@ const emptyCustomer = {
 };
 
 export default function Billing() {
-  const [started, setStarted] = useState(false);
-  const [step, setStep] = useState<Step>("customer");
-  const [customer, setCustomer] = useState(emptyCustomer);
-  const [customerId, setCustomerId] = useState<string | null>(null);
+export default function Billing() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const presetCustomer = (location.state as any)?.customer as
+    | { id: string; company_name: string; contact_person?: string | null; email?: string | null; phone?: string | null; address?: string | null; vat_number?: string | null }
+    | undefined;
+
+  const [started, setStarted] = useState(!!presetCustomer);
+  const [step, setStep] = useState<Step>(presetCustomer ? "order" : "customer");
+  const [customerMode, setCustomerMode] = useState<CustomerMode>(presetCustomer ? "existing" : "new");
+  const [customer, setCustomer] = useState(presetCustomer ? {
+    company_name: presetCustomer.company_name,
+    contact_person: presetCustomer.contact_person || "",
+    email: presetCustomer.email || "",
+    phone: presetCustomer.phone || "",
+    address: presetCustomer.address || "",
+    vat_number: presetCustomer.vat_number || "",
+  } : emptyCustomer);
+  const [customerId, setCustomerId] = useState<string | null>(presetCustomer?.id ?? null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [laborCharges, setLaborCharges] = useState("");
   const [serviceCharges, setServiceCharges] = useState("");
@@ -49,6 +64,22 @@ export default function Billing() {
   const [bankForm, setBankForm] = useState({ bank: "", reference: "" });
   const [invoiceNumber, setInvoiceNumber] = useState<string>("");
   const qc = useQueryClient();
+
+  // Clear navigation state once consumed so refresh starts fresh
+  useEffect(() => {
+    if (presetCustomer) navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ["customers"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("customers").select("*").order("company_name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: started,
+  });
 
   const { data: inventory = [] } = useQuery({
     queryKey: ["inventory"],
@@ -59,6 +90,7 @@ export default function Billing() {
     },
     enabled: started,
   });
+
 
   const fmt = (n: number) => `SAR ${n.toLocaleString("en", { minimumFractionDigits: 2 })}`;
   const hardwareTotal = items.reduce((s, it) => s + it.quantity * it.unit_price, 0);
