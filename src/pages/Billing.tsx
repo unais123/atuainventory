@@ -103,6 +103,7 @@ export default function Billing() {
   const reset = () => {
     setStarted(false);
     setStep("customer");
+    setCustomerMode("new");
     setCustomer(emptyCustomer);
     setCustomerId(null);
     setItems([]);
@@ -113,6 +114,31 @@ export default function Billing() {
     setBankForm({ bank: "", reference: "" });
     setInvoiceNumber("");
   };
+
+  const pickExistingCustomer = (id: string) => {
+    const c = customers.find((x: any) => x.id === id);
+    if (!c) return;
+    setCustomerId(c.id);
+    setCustomer({
+      company_name: c.company_name,
+      contact_person: c.contact_person || "",
+      email: c.email || "",
+      phone: c.phone || "",
+      address: c.address || "",
+      vat_number: c.vat_number || "",
+    });
+  };
+
+  const proceedFromCustomer = () => {
+    if (customerMode === "existing") {
+      if (!customerId) { toast.error("Please select a customer"); return; }
+      setStep("order");
+    } else {
+      if (!customer.company_name.trim()) { toast.error("Company name is required"); return; }
+      saveCustomer.mutate();
+    }
+  };
+
 
   const saveCustomer = useMutation({
     mutationFn: async () => {
