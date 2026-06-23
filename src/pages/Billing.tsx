@@ -236,6 +236,43 @@ export default function Billing() {
   };
   const updateQty = (i: number, q: number) => setItems((p) => p.map((it, idx) => idx === i ? { ...it, quantity: Math.max(1, q) } : it));
 
+  const addInventoryToOrder = (inv: any) => {
+    setItems((p) => {
+      const existing = p.findIndex((it) => it.inventory_id === inv.id);
+      if (existing >= 0) {
+        return p.map((it, idx) => idx === existing ? { ...it, quantity: it.quantity + 1 } : it);
+      }
+      return [...p, { inventory_id: inv.id, item_name: inv.item_name, quantity: 1, unit_price: Number(inv.selling_price) }];
+    });
+    toast.success(`Added: ${inv.item_name}`);
+  };
+
+  const findAndAddByQuery = (query: string) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return;
+    const match = inventory.find((i: any) =>
+      (i.barcode && i.barcode.toLowerCase() === q) ||
+      (i.serial_number && i.serial_number.toLowerCase() === q) ||
+      i.item_name.toLowerCase() === q
+    ) || inventory.find((i: any) => i.item_name.toLowerCase().includes(q));
+    if (match) {
+      addInventoryToOrder(match);
+      setItemSearch("");
+    } else {
+      toast.error(`No item matches "${query}"`);
+    }
+  };
+
+  const searchSuggestions = itemSearch.trim().length > 0
+    ? inventory.filter((i: any) => {
+        const q = itemSearch.toLowerCase();
+        return i.item_name.toLowerCase().includes(q) ||
+          (i.barcode && i.barcode.toLowerCase().includes(q)) ||
+          (i.brand && i.brand.toLowerCase().includes(q)) ||
+          (i.model && i.model.toLowerCase().includes(q));
+      }).slice(0, 6)
+    : [];
+
   const stepIndex = ["customer", "order", "invoice", "payment", "done"].indexOf(step);
   const steps = [
     { key: "customer", label: "Customer" },
