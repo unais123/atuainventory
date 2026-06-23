@@ -64,6 +64,8 @@ export default function Billing() {
   const [cardForm, setCardForm] = useState({ number: "", name: "", expiry: "", cvc: "" });
   const [bankForm, setBankForm] = useState({ bank: "", reference: "" });
   const [invoiceNumber, setInvoiceNumber] = useState<string>("");
+  const [itemSearch, setItemSearch] = useState("");
+  const [scannerOpen, setScannerOpen] = useState(false);
   const qc = useQueryClient();
 
   // Clear navigation state once consumed so refresh starts fresh
