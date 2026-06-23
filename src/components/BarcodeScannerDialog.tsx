@@ -31,6 +31,40 @@ export function BarcodeScannerDialog({ open, onOpenChange, onScan }: Props) {
   };
 
   const startScanner = async () => {
+    // Pre-flight checks for common failure modes
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast.error("Camera API not available in this browser. Type the barcode instead.");
+      return;
+    }
+    if (!window.isSecureContext) {
+      toast.error("Camera requires a secure (HTTPS) connection.");
+      return;
+    }
+    // Detect iframe without camera permission (Lovable preview)
+    const inIframe = window.self !== window.top;
+    try {
+      // Trigger permission prompt synchronously from the user gesture
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      // Stop the probe stream; html5-qrcode will request its own
+      stream.getTracks().forEach((t) => t.stop());
+    } catch (err: any) {
+      const name = err?.name || "";
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        toast.error(
+          inIframe
+            ? "Camera blocked in preview. Open the app in a new tab and allow camera access."
+            : "Camera permission denied. Enable it in your browser settings."
+        );
+      } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+        toast.error("No camera found on this device.");
+      } else if (name === "NotReadableError") {
+        toast.error("Camera is in use by another app. Close it and try again.");
+      } else {
+        toast.error(`Camera error: ${err?.message || name || "unknown"}`);
+      }
+      return;
+    }
+
     try {
       const scanner = new Html5Qrcode(elementId);
       scannerRef.current = scanner;
@@ -46,7 +80,7 @@ export function BarcodeScannerDialog({ open, onOpenChange, onScan }: Props) {
         () => {}
       );
     } catch (e: any) {
-      toast.error("Unable to access camera. Type the barcode instead.");
+      toast.error(`Unable to start scanner: ${e?.message || "unknown error"}`);
       setScanning(false);
     }
   };
