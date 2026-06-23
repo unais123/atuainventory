@@ -37,7 +37,7 @@ const emptyCustomer = {
 };
 
 export default function Billing() {
-export default function Billing() {
+
   const location = useLocation();
   const navigate = useNavigate();
   const presetCustomer = (location.state as any)?.customer as
