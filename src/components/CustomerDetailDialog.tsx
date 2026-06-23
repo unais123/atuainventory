@@ -197,12 +197,24 @@ export function CustomerDetailDialog({ customer, open, onOpenChange }: Props) {
                 )}
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <h3 className="text-sm font-semibold">Order / Invoice History</h3>
-                <Button size="sm" onClick={() => setOrderOpen(true)}>
-                  <ShoppingCart className="h-4 w-4 mr-1" />Create Order
-                </Button>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setOrderOpen(true)}>
+                    <ShoppingCart className="h-4 w-4 mr-1" />Quick Order
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      onOpenChange(false);
+                      navigate("/billing", { state: { customer } });
+                    }}
+                  >
+                    <Receipt className="h-4 w-4 mr-1" />New Invoice
+                  </Button>
+                </div>
               </div>
+
 
               <div className="rounded-lg border overflow-auto">
                 <Table>
