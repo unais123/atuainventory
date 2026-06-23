@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Receipt, ArrowRight, ArrowLeft, Plus, Trash2, CreditCard, Building2, CheckCircle2, FileText,
@@ -15,6 +17,8 @@ import {
 import { cn } from "@/lib/utils";
 
 type Step = "customer" | "order" | "invoice" | "payment" | "done";
+type CustomerMode = "existing" | "new";
+
 
 interface OrderItem {
   inventory_id: string;
