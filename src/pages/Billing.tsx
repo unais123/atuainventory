@@ -701,6 +701,12 @@ export default function Billing() {
           </CardContent>
         </Card>
       )}
+
+      <BarcodeScannerDialog
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onScan={(value) => findAndAddByQuery(value)}
+      />
     </div>
   );
 }
