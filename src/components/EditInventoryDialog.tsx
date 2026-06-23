@@ -146,8 +146,34 @@ export function EditInventoryDialog({ item, open, onOpenChange }: EditInventoryD
               </Button>
             </div>
             {form.barcode && (
-              <div className="rounded-md border bg-background p-2 flex justify-center">
+              <div className="rounded-md border bg-background p-2 flex flex-col items-center gap-2">
                 <BarcodeDisplay value={form.barcode} />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    try {
+                      downloadBarcodeLabel({
+                        ...item,
+                        item_name: form.item_name,
+                        category: form.category,
+                        brand: form.brand,
+                        model: form.model,
+                        serial_number: form.serial_number,
+                        barcode: form.barcode,
+                        warehouse: form.warehouse,
+                        quantity: Number(form.quantity) || 0,
+                        purchase_price: Number(form.purchase_price) || 0,
+                        selling_price: Number(form.selling_price) || 0,
+                      });
+                    } catch (e: any) {
+                      toast.error(e.message);
+                    }
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-1" />Download Barcode
+                </Button>
               </div>
             )}
           </div>
