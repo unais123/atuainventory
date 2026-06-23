@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Receipt, ArrowRight, ArrowLeft, Plus, Trash2, CreditCard, Building2, CheckCircle2, FileText,
@@ -15,6 +17,8 @@ import {
 import { cn } from "@/lib/utils";
 
 type Step = "customer" | "order" | "invoice" | "payment" | "done";
+type CustomerMode = "existing" | "new";
+
 
 interface OrderItem {
   inventory_id: string;
@@ -33,10 +37,25 @@ const emptyCustomer = {
 };
 
 export default function Billing() {
-  const [started, setStarted] = useState(false);
-  const [step, setStep] = useState<Step>("customer");
-  const [customer, setCustomer] = useState(emptyCustomer);
-  const [customerId, setCustomerId] = useState<string | null>(null);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  const presetCustomer = (location.state as any)?.customer as
+    | { id: string; company_name: string; contact_person?: string | null; email?: string | null; phone?: string | null; address?: string | null; vat_number?: string | null }
+    | undefined;
+
+  const [started, setStarted] = useState(!!presetCustomer);
+  const [step, setStep] = useState<Step>(presetCustomer ? "order" : "customer");
+  const [customerMode, setCustomerMode] = useState<CustomerMode>(presetCustomer ? "existing" : "new");
+  const [customer, setCustomer] = useState(presetCustomer ? {
+    company_name: presetCustomer.company_name,
+    contact_person: presetCustomer.contact_person || "",
+    email: presetCustomer.email || "",
+    phone: presetCustomer.phone || "",
+    address: presetCustomer.address || "",
+    vat_number: presetCustomer.vat_number || "",
+  } : emptyCustomer);
+  const [customerId, setCustomerId] = useState<string | null>(presetCustomer?.id ?? null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [laborCharges, setLaborCharges] = useState("");
   const [serviceCharges, setServiceCharges] = useState("");
@@ -45,6 +64,22 @@ export default function Billing() {
   const [bankForm, setBankForm] = useState({ bank: "", reference: "" });
   const [invoiceNumber, setInvoiceNumber] = useState<string>("");
   const qc = useQueryClient();
+
+  // Clear navigation state once consumed so refresh starts fresh
+  useEffect(() => {
+    if (presetCustomer) navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ["customers"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("customers").select("*").order("company_name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: started,
+  });
 
   const { data: inventory = [] } = useQuery({
     queryKey: ["inventory"],
@@ -55,6 +90,7 @@ export default function Billing() {
     },
     enabled: started,
   });
+
 
   const fmt = (n: number) => `SAR ${n.toLocaleString("en", { minimumFractionDigits: 2 })}`;
   const hardwareTotal = items.reduce((s, it) => s + it.quantity * it.unit_price, 0);
@@ -67,6 +103,7 @@ export default function Billing() {
   const reset = () => {
     setStarted(false);
     setStep("customer");
+    setCustomerMode("new");
     setCustomer(emptyCustomer);
     setCustomerId(null);
     setItems([]);
@@ -77,6 +114,31 @@ export default function Billing() {
     setBankForm({ bank: "", reference: "" });
     setInvoiceNumber("");
   };
+
+  const pickExistingCustomer = (id: string) => {
+    const c = customers.find((x: any) => x.id === id);
+    if (!c) return;
+    setCustomerId(c.id);
+    setCustomer({
+      company_name: c.company_name,
+      contact_person: c.contact_person || "",
+      email: c.email || "",
+      phone: c.phone || "",
+      address: c.address || "",
+      vat_number: c.vat_number || "",
+    });
+  };
+
+  const proceedFromCustomer = () => {
+    if (customerMode === "existing") {
+      if (!customerId) { toast.error("Please select a customer"); return; }
+      setStep("order");
+    } else {
+      if (!customer.company_name.trim()) { toast.error("Company name is required"); return; }
+      saveCustomer.mutate();
+    }
+  };
+
 
   const saveCustomer = useMutation({
     mutationFn: async () => {
@@ -239,45 +301,75 @@ export default function Billing() {
         <Card>
           <CardHeader><CardTitle>Customer Details</CardTitle></CardHeader>
           <CardContent>
-            <form
-              onSubmit={(e) => { e.preventDefault(); saveCustomer.mutate(); }}
-              className="grid gap-4"
-            >
-              <div className="grid gap-2">
-                <Label>Company Name *</Label>
-                <Input value={customer.company_name} onChange={(e) => setCustomer({ ...customer, company_name: e.target.value })} required />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Tabs value={customerMode} onValueChange={(v) => { setCustomerMode(v as CustomerMode); setCustomerId(null); setCustomer(emptyCustomer); }}>
+              <TabsList className="mb-4">
+                <TabsTrigger value="existing">Existing Customer</TabsTrigger>
+                <TabsTrigger value="new">New Customer</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="existing" className="space-y-4">
                 <div className="grid gap-2">
-                  <Label>Contact Person</Label>
-                  <Input value={customer.contact_person} onChange={(e) => setCustomer({ ...customer, contact_person: e.target.value })} />
+                  <Label>Select Customer *</Label>
+                  <Select value={customerId ?? ""} onValueChange={pickExistingCustomer}>
+                    <SelectTrigger><SelectValue placeholder="Choose an existing customer" /></SelectTrigger>
+                    <SelectContent>
+                      {customers.map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.company_name}{c.contact_person ? ` — ${c.contact_person}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {customerId && (
+                  <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1">
+                    <p className="font-medium">{customer.company_name}</p>
+                    {customer.contact_person && <p className="text-muted-foreground">{customer.contact_person}</p>}
+                    {customer.email && <p className="text-muted-foreground">{customer.email}</p>}
+                    {customer.phone && <p className="text-muted-foreground">{customer.phone}</p>}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="new" className="space-y-4">
+                <div className="grid gap-2">
+                  <Label>Company Name *</Label>
+                  <Input value={customer.company_name} onChange={(e) => setCustomer({ ...customer, company_name: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>Contact Person</Label>
+                    <Input value={customer.contact_person} onChange={(e) => setCustomer({ ...customer, contact_person: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Phone</Label>
+                    <Input value={customer.phone} onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} />
+                  </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label>Phone</Label>
-                  <Input value={customer.phone} onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} />
+                  <Label>Email</Label>
+                  <Input type="email" value={customer.email} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} />
                 </div>
-              </div>
-              <div className="grid gap-2">
-                <Label>Email</Label>
-                <Input type="email" value={customer.email} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label>Address</Label>
-                <Input value={customer.address} onChange={(e) => setCustomer({ ...customer, address: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label>VAT Number</Label>
-                <Input value={customer.vat_number} onChange={(e) => setCustomer({ ...customer, vat_number: e.target.value })} />
-              </div>
-              <div className="flex justify-end">
-                <Button type="submit" disabled={saveCustomer.isPending}>
-                  {saveCustomer.isPending ? "Saving..." : "Proceed"} <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </form>
+                <div className="grid gap-2">
+                  <Label>Address</Label>
+                  <Input value={customer.address} onChange={(e) => setCustomer({ ...customer, address: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <Label>VAT Number</Label>
+                  <Input value={customer.vat_number} onChange={(e) => setCustomer({ ...customer, vat_number: e.target.value })} />
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex justify-end mt-4">
+              <Button onClick={proceedFromCustomer} disabled={saveCustomer.isPending}>
+                {saveCustomer.isPending ? "Saving..." : "Proceed"} <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
+
 
       {step === "order" && (
         <Card>
