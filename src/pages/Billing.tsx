@@ -12,9 +12,10 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Receipt, ArrowRight, ArrowLeft, Plus, Trash2, CreditCard, Building2, CheckCircle2, FileText,
+  Receipt, ArrowRight, ArrowLeft, Plus, Trash2, CreditCard, Building2, CheckCircle2, FileText, ScanLine, Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BarcodeScannerDialog } from "@/components/BarcodeScannerDialog";
 
 type Step = "customer" | "order" | "invoice" | "payment" | "done";
 type CustomerMode = "existing" | "new";
@@ -63,6 +64,8 @@ export default function Billing() {
   const [cardForm, setCardForm] = useState({ number: "", name: "", expiry: "", cvc: "" });
   const [bankForm, setBankForm] = useState({ bank: "", reference: "" });
   const [invoiceNumber, setInvoiceNumber] = useState<string>("");
+  const [itemSearch, setItemSearch] = useState("");
+  const [scannerOpen, setScannerOpen] = useState(false);
   const qc = useQueryClient();
 
   // Clear navigation state once consumed so refresh starts fresh
@@ -233,6 +236,43 @@ export default function Billing() {
   };
   const updateQty = (i: number, q: number) => setItems((p) => p.map((it, idx) => idx === i ? { ...it, quantity: Math.max(1, q) } : it));
 
+  const addInventoryToOrder = (inv: any) => {
+    setItems((p) => {
+      const existing = p.findIndex((it) => it.inventory_id === inv.id);
+      if (existing >= 0) {
+        return p.map((it, idx) => idx === existing ? { ...it, quantity: it.quantity + 1 } : it);
+      }
+      return [...p, { inventory_id: inv.id, item_name: inv.item_name, quantity: 1, unit_price: Number(inv.selling_price) }];
+    });
+    toast.success(`Added: ${inv.item_name}`);
+  };
+
+  const findAndAddByQuery = (query: string) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return;
+    const match = inventory.find((i: any) =>
+      (i.barcode && i.barcode.toLowerCase() === q) ||
+      (i.serial_number && i.serial_number.toLowerCase() === q) ||
+      i.item_name.toLowerCase() === q
+    ) || inventory.find((i: any) => i.item_name.toLowerCase().includes(q));
+    if (match) {
+      addInventoryToOrder(match);
+      setItemSearch("");
+    } else {
+      toast.error(`No item matches "${query}"`);
+    }
+  };
+
+  const searchSuggestions = itemSearch.trim().length > 0
+    ? inventory.filter((i: any) => {
+        const q = itemSearch.toLowerCase();
+        return i.item_name.toLowerCase().includes(q) ||
+          (i.barcode && i.barcode.toLowerCase().includes(q)) ||
+          (i.brand && i.brand.toLowerCase().includes(q)) ||
+          (i.model && i.model.toLowerCase().includes(q));
+      }).slice(0, 6)
+    : [];
+
   const stepIndex = ["customer", "order", "invoice", "payment", "done"].indexOf(step);
   const steps = [
     { key: "customer", label: "Customer" },
@@ -375,12 +415,58 @@ export default function Billing() {
         <Card>
           <CardHeader><CardTitle>Create Order</CardTitle></CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Add Item — Scan, Type Barcode or Product Name</Label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    className="pl-9 h-9"
+                    placeholder="Type product name, barcode or serial..."
+                    value={itemSearch}
+                    onChange={(e) => setItemSearch(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); findAndAddByQuery(itemSearch); } }}
+                  />
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={() => setScannerOpen(true)}>
+                  <ScanLine className="h-4 w-4 mr-1" />Scan
+                </Button>
+                <Button type="button" size="sm" onClick={() => findAndAddByQuery(itemSearch)} disabled={!itemSearch.trim()}>
+                  Add
+                </Button>
+              </div>
+              {searchSuggestions.length > 0 && (
+                <div className="rounded-md border bg-popover divide-y max-h-56 overflow-auto">
+                  {searchSuggestions.map((inv: any) => (
+                    <button
+                      key={inv.id}
+                      type="button"
+                      className="w-full text-left p-2 text-sm hover:bg-accent flex items-center justify-between gap-2"
+                      onClick={() => { addInventoryToOrder(inv); setItemSearch(""); }}
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{inv.item_name}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {[inv.brand, inv.model, inv.barcode].filter(Boolean).join(" · ")}
+                        </p>
+                      </div>
+                      <div className="text-right text-xs shrink-0">
+                        <p className="font-medium">{fmt(Number(inv.selling_price))}</p>
+                        <p className="text-muted-foreground">Stock: {inv.quantity}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center justify-between">
               <Label className="text-sm font-semibold">Order Items</Label>
               <Button type="button" variant="outline" size="sm" onClick={addItem}>
                 <Plus className="h-3 w-3 mr-1" />Add Item
               </Button>
             </div>
+
 
             {items.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">No items added yet.</p>
@@ -615,6 +701,12 @@ export default function Billing() {
           </CardContent>
         </Card>
       )}
+
+      <BarcodeScannerDialog
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onScan={(value) => findAndAddByQuery(value)}
+      />
     </div>
   );
 }
