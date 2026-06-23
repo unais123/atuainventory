@@ -301,45 +301,75 @@ export default function Billing() {
         <Card>
           <CardHeader><CardTitle>Customer Details</CardTitle></CardHeader>
           <CardContent>
-            <form
-              onSubmit={(e) => { e.preventDefault(); saveCustomer.mutate(); }}
-              className="grid gap-4"
-            >
-              <div className="grid gap-2">
-                <Label>Company Name *</Label>
-                <Input value={customer.company_name} onChange={(e) => setCustomer({ ...customer, company_name: e.target.value })} required />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Tabs value={customerMode} onValueChange={(v) => { setCustomerMode(v as CustomerMode); setCustomerId(null); setCustomer(emptyCustomer); }}>
+              <TabsList className="mb-4">
+                <TabsTrigger value="existing">Existing Customer</TabsTrigger>
+                <TabsTrigger value="new">New Customer</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="existing" className="space-y-4">
                 <div className="grid gap-2">
-                  <Label>Contact Person</Label>
-                  <Input value={customer.contact_person} onChange={(e) => setCustomer({ ...customer, contact_person: e.target.value })} />
+                  <Label>Select Customer *</Label>
+                  <Select value={customerId ?? ""} onValueChange={pickExistingCustomer}>
+                    <SelectTrigger><SelectValue placeholder="Choose an existing customer" /></SelectTrigger>
+                    <SelectContent>
+                      {customers.map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.company_name}{c.contact_person ? ` — ${c.contact_person}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {customerId && (
+                  <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1">
+                    <p className="font-medium">{customer.company_name}</p>
+                    {customer.contact_person && <p className="text-muted-foreground">{customer.contact_person}</p>}
+                    {customer.email && <p className="text-muted-foreground">{customer.email}</p>}
+                    {customer.phone && <p className="text-muted-foreground">{customer.phone}</p>}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="new" className="space-y-4">
+                <div className="grid gap-2">
+                  <Label>Company Name *</Label>
+                  <Input value={customer.company_name} onChange={(e) => setCustomer({ ...customer, company_name: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>Contact Person</Label>
+                    <Input value={customer.contact_person} onChange={(e) => setCustomer({ ...customer, contact_person: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Phone</Label>
+                    <Input value={customer.phone} onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} />
+                  </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label>Phone</Label>
-                  <Input value={customer.phone} onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} />
+                  <Label>Email</Label>
+                  <Input type="email" value={customer.email} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} />
                 </div>
-              </div>
-              <div className="grid gap-2">
-                <Label>Email</Label>
-                <Input type="email" value={customer.email} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label>Address</Label>
-                <Input value={customer.address} onChange={(e) => setCustomer({ ...customer, address: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label>VAT Number</Label>
-                <Input value={customer.vat_number} onChange={(e) => setCustomer({ ...customer, vat_number: e.target.value })} />
-              </div>
-              <div className="flex justify-end">
-                <Button type="submit" disabled={saveCustomer.isPending}>
-                  {saveCustomer.isPending ? "Saving..." : "Proceed"} <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </form>
+                <div className="grid gap-2">
+                  <Label>Address</Label>
+                  <Input value={customer.address} onChange={(e) => setCustomer({ ...customer, address: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <Label>VAT Number</Label>
+                  <Input value={customer.vat_number} onChange={(e) => setCustomer({ ...customer, vat_number: e.target.value })} />
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex justify-end mt-4">
+              <Button onClick={proceedFromCustomer} disabled={saveCustomer.isPending}>
+                {saveCustomer.isPending ? "Saving..." : "Proceed"} <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
+
 
       {step === "order" && (
         <Card>
