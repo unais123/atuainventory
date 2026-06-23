@@ -13,9 +13,10 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, ScanLine, RefreshCw } from "lucide-react";
+import { Trash2, ScanLine, RefreshCw, Download } from "lucide-react";
 import { BarcodeDisplay, generateBarcodeValue } from "@/components/BarcodeDisplay";
 import { BarcodeScannerDialog } from "@/components/BarcodeScannerDialog";
+import { downloadBarcodeLabel } from "@/lib/barcode-label";
 
 interface EditInventoryDialogProps {
   item: any | null;
