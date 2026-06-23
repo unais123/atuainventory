@@ -415,12 +415,58 @@ export default function Billing() {
         <Card>
           <CardHeader><CardTitle>Create Order</CardTitle></CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Add Item — Scan, Type Barcode or Product Name</Label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    className="pl-9 h-9"
+                    placeholder="Type product name, barcode or serial..."
+                    value={itemSearch}
+                    onChange={(e) => setItemSearch(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); findAndAddByQuery(itemSearch); } }}
+                  />
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={() => setScannerOpen(true)}>
+                  <ScanLine className="h-4 w-4 mr-1" />Scan
+                </Button>
+                <Button type="button" size="sm" onClick={() => findAndAddByQuery(itemSearch)} disabled={!itemSearch.trim()}>
+                  Add
+                </Button>
+              </div>
+              {searchSuggestions.length > 0 && (
+                <div className="rounded-md border bg-popover divide-y max-h-56 overflow-auto">
+                  {searchSuggestions.map((inv: any) => (
+                    <button
+                      key={inv.id}
+                      type="button"
+                      className="w-full text-left p-2 text-sm hover:bg-accent flex items-center justify-between gap-2"
+                      onClick={() => { addInventoryToOrder(inv); setItemSearch(""); }}
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{inv.item_name}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {[inv.brand, inv.model, inv.barcode].filter(Boolean).join(" · ")}
+                        </p>
+                      </div>
+                      <div className="text-right text-xs shrink-0">
+                        <p className="font-medium">{fmt(Number(inv.selling_price))}</p>
+                        <p className="text-muted-foreground">Stock: {inv.quantity}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center justify-between">
               <Label className="text-sm font-semibold">Order Items</Label>
               <Button type="button" variant="outline" size="sm" onClick={addItem}>
                 <Plus className="h-3 w-3 mr-1" />Add Item
               </Button>
             </div>
+
 
             {items.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">No items added yet.</p>
